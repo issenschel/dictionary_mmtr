@@ -1,8 +1,11 @@
 package service;
 
+import dto.DictionaryDto;
 import exception.ValidationException;
 import repository.DictionaryRepository;
 import validation.Validation;
+
+import java.util.List;
 
 
 public class FileDictionaryService implements DictionaryService{
@@ -14,11 +17,12 @@ public class FileDictionaryService implements DictionaryService{
         this.validation = validation;
     }
 
-    public void displayDictionary() {
+    public List<DictionaryDto> findAll() {
         try {
-            dictionaryRepository.displayDictionary();
+            return dictionaryRepository.findAll();
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());
+            return null;
         }
     }
 

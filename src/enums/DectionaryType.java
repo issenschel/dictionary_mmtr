@@ -1,10 +1,10 @@
 package enums;
 
 public enum DectionaryType {
-    LATIN("default_latin"),
-    NUMBER("default_numbers");
+    LATIN("dictionary_latin"),
+    NUMBER("dictionary_number");
 
-    private String description;
+    private final String description;
 
     DectionaryType(String description) {
         this.description = description;
@@ -12,10 +12,6 @@ public enum DectionaryType {
 
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 }
 

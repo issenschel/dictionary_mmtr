@@ -1,7 +1,9 @@
 package menu;
 
+import dto.DictionaryDto;
 import service.DictionaryService;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryDisplay {
@@ -18,19 +20,21 @@ public class DictionaryDisplay {
         boolean exit = true;
         while (exit){
             String key;
-            System.out.println("""
-                    Выберите что вы хотите сделать:
-                    1 - Список записей
-                    2 - Удаление записи
-                    3 - Поиск записи
-                    4 - Добавление записи
-                    0: Выход в выбор словаря""");
+            System.out.println("Выберите что вы хотите сделать:\n" +
+                               "1 - Список записей\n" +
+                               "2 - Удаление записи\n" +
+                               "3 - Поиск записи\n" +
+                               "4 - Добавление записи\n" +
+                               "0: Выход в выбор словаря");
             System.out.print("Введите число: ");
             String choice = console.nextLine();
             switch (choice) {
                 case "1":
                     System.out.println("Вот весь список:");
-                    dictionaryService.displayDictionary();
+                    List<DictionaryDto> dictionaryDtos = dictionaryService.findAll();
+                    for (DictionaryDto dictionaryDto : dictionaryDtos) {
+                        System.out.println(dictionaryDto.getKey() + " " + dictionaryDto.getValue());
+                    }
                     break;
                 case "2":
                     System.out.print("Введите ключ для удаления записи: ");
