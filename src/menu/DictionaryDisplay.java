@@ -1,9 +1,16 @@
 package menu;
 
+import org.w3c.dom.Document;
 import pojo.KeyValuePair;
 import pojo.KeyValuePairGroup;
 import service.DictionaryService;
 
+import javax.swing.text.BadLocationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Scanner;
 
@@ -27,6 +34,7 @@ public class DictionaryDisplay {
                                "3 - Поиск записи\n" +
                                "4 - Добавление записи\n" +
                                "5 - Удаление записи\n" +
+                               "6 - Вывод в формате XML\n" +
                                "0: Выход в выбор словаря");
             System.out.print("Введите число: ");
             String choice = console.nextLine();
@@ -46,6 +54,9 @@ public class DictionaryDisplay {
                 case "5":
                     removeEntry();
                     break;
+                case "6":
+                    getDictionaryAsXML();
+                    break;
                 case "0":
                     exit = false;
                     break;
@@ -58,9 +69,13 @@ public class DictionaryDisplay {
 
     private void findAll(){
         System.out.println("Вот весь список:");
-        List<KeyValuePair> keyValuePairs = dictionaryService.findAll();
-        for (KeyValuePair keyValuePair : keyValuePairs) {
-            System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+        try {
+            List<KeyValuePair> keyValuePairs = dictionaryService.findAll();
+            for (KeyValuePair keyValuePair : keyValuePairs) {
+                System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+            }
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -70,19 +85,25 @@ public class DictionaryDisplay {
         System.out.println("Введите количество элементов:");
         String size = console.nextLine();
         System.out.println("Список:");
-        KeyValuePairGroup dictionaryPOJOList = dictionaryService.pagination(Integer.parseInt(page),Integer.parseInt(size));
-        for (KeyValuePair keyValuePair : dictionaryPOJOList.getDictionary()) {
-            System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+        try {
+            KeyValuePairGroup dictionaryPOJOList = dictionaryService.getPage(Integer.parseInt(page),Integer.parseInt(size));
+            for (KeyValuePair keyValuePair : dictionaryPOJOList.getDictionary()) {
+                System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+            }
+            System.out.println("Количество страниц: " + dictionaryPOJOList.getCount());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
-        System.out.println("Количество страниц: " + dictionaryPOJOList.getCount());
     }
 
     private void searchEntryByKey(){
         System.out.println("Введите ключ для поиска");
         key = console.nextLine();
-        KeyValuePair keyValuePair = dictionaryService.searchEntryByKey(key);
-        if(keyValuePair.getKey() != null){
+        try {
+            KeyValuePair keyValuePair = dictionaryService.searchEntryByKey(key);
             System.out.println("Результат: " + keyValuePair.getKey() + " " + keyValuePair.getValue());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -91,15 +112,40 @@ public class DictionaryDisplay {
         key = console.nextLine();
         System.out.println("Введите значение перевода");
         String name= console.nextLine();
-        KeyValuePair keyValuePair = dictionaryService.addEntry(key,name);
-        if(keyValuePair.getKey() != null){
+        try {
+            KeyValuePair keyValuePair = dictionaryService.addEntry(key,name);
             System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+        }catch (RuntimeException e){
+            System.out.println(e.getMessage());
         }
     }
 
     private void removeEntry(){
         System.out.print("Введите ключ для удаления записи: ");
         key = console.nextLine();
-        System.out.println(dictionaryService.removeEntryByKey(key));
+        try {
+            System.out.println(dictionaryService.removeEntryByKey(key));
+        }catch (RuntimeException e){
+            System.out.println(e.getMessage());
+        }
     }
+
+    private void getDictionaryAsXML() {
+        try(StringWriter stringWriter = new StringWriter()) {
+            Document document = dictionaryService.getDictionaryAsXML();
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+            DOMSource source = new DOMSource(document);
+            StreamResult result = new StreamResult(stringWriter);
+            transformer.transform(source, result);
+            System.out.println(stringWriter);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
 }

@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface DictionaryRepository {
     List<KeyValuePair> findAll() throws IOException;
-    KeyValuePairGroup pagination(int page, int size) throws IOException;
+    KeyValuePairGroup getPage(int page, int size) throws IOException;
     boolean removeEntryByKey(String key) throws IOException;
     Optional<KeyValuePair> searchEntryByKey(String key) throws IOException;
     KeyValuePair addEntry(KeyValuePair keyValuePair) throws IOException;

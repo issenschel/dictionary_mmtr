@@ -77,40 +77,31 @@ public abstract class BaseFileDictionaryRepository implements DictionaryReposito
     }
 
     @Override
-    public KeyValuePairGroup pagination(int page, int size) throws IOException {
+    public KeyValuePairGroup getPage(int page, int size) throws IOException {
         KeyValuePairGroup result = new KeyValuePairGroup();
-        List<KeyValuePair> items = new ArrayList<>();
+        List<KeyValuePair> items;
         int totalPages;
+        page -= 1;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()))) {
-            int totalLines = (int) Files.lines(dectionaryPath, Charset.defaultCharset()).count();
-            totalPages = (int) Math.ceil((double) totalLines / size);
-            if (page < 0 || page >= totalPages) {
-                return result;
-            }
-            int startLine = page * size;
-            String line;
-            int currentLine = 0;
-            while ((line = reader.readLine()) != null) {
+        long totalLines = Files.lines(dectionaryPath, Charset.defaultCharset()).count();
+        totalPages = (int) Math.ceil((double) totalLines / size);
+        result.setCount(totalPages);
 
-                if (currentLine < startLine) {
-                    currentLine++;
-                    continue;
-                }
+        if (page < 0 || page >= totalPages) {
+            return result;
+        }
 
-                if (currentLine >= startLine + size) {
-                    break;
-                }
-
-                String[] parts = line.split(" ", 2);
-                KeyValuePair item = new KeyValuePair(parts[0], parts[1]);
-                items.add(item);
-                currentLine++;
-            }
+        try (Stream<String> lines = Files.lines(dectionaryPath, Charset.defaultCharset())) {
+            items = lines.skip(page * size)
+                    .limit(size)
+                    .map(line -> {
+                        String[] parts = line.split(" ", 2);
+                        return new KeyValuePair(parts[0], parts[1]);
+                    })
+                    .collect(Collectors.toList());
         }
 
         result.setDictionary(items);
-        result.setCount(totalPages);
         return result;
     }
 }
