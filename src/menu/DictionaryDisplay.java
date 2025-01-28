@@ -80,7 +80,10 @@ public class DictionaryDisplay {
     private void searchEntryByKey(){
         System.out.println("Введите ключ для поиска");
         key = console.nextLine();
-        dictionaryService.searchEntryByKey(key);
+        KeyValuePair keyValuePair = dictionaryService.searchEntryByKey(key);
+        if(keyValuePair.getKey() != null){
+            System.out.println("Результат: " + keyValuePair.getKey() + " " + keyValuePair.getValue());
+        }
     }
 
     private void addEntry(){
@@ -88,12 +91,15 @@ public class DictionaryDisplay {
         key = console.nextLine();
         System.out.println("Введите значение перевода");
         String name= console.nextLine();
-        dictionaryService.addEntry(key, name);
+        KeyValuePair keyValuePair = dictionaryService.addEntry(key,name);
+        if(keyValuePair.getKey() != null){
+            System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
+        }
     }
 
     private void removeEntry(){
         System.out.print("Введите ключ для удаления записи: ");
         key = console.nextLine();
-        dictionaryService.removeEntryByKey(key);
+        System.out.println(dictionaryService.removeEntryByKey(key));
     }
 }

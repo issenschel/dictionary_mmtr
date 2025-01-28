@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface DictionaryService {
    List<KeyValuePair> findAll();
-   void removeEntryByKey(String key);
-   void searchEntryByKey(String key);
-   void addEntry(String key, String value);
+   String removeEntryByKey(String key);
+   KeyValuePair searchEntryByKey(String key);
+   KeyValuePair addEntry(String key, String value);
    KeyValuePairGroup pagination(int page, int size);
 }

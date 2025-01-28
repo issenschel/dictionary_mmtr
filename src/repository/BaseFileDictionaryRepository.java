@@ -1,8 +1,6 @@
 package repository;
 
 import pojo.KeyValuePair;
-import exception.AddEntryException;
-import exception.RemoveEntryException;
 import pojo.KeyValuePairGroup;
 
 import java.io.*;
@@ -16,34 +14,31 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseFileDictionary implements DictionaryRepository {
+public abstract class BaseFileDictionaryRepository implements DictionaryRepository {
 
     protected final Path dectionaryPath;
 
-    public BaseFileDictionary(Path dectionaryPath) {
+    public BaseFileDictionaryRepository(Path dectionaryPath) {
         this.dectionaryPath = dectionaryPath;
     }
 
     @Override
-    public List<KeyValuePair> findAll() {
+    public List<KeyValuePair> findAll() throws IOException {
         try (Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
             return stream.map(line -> {
                         String[] parts = line.split(" ", 2);
                         return new KeyValuePair(parts[0], parts[1]);
-                    })
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                    }).collect(Collectors.toList());
         }
     }
 
     @Override
-    public boolean removeEntryByKey(String key) {
+    public boolean removeEntryByKey(String key) throws IOException {
         boolean found = false;
-        try {
-            File tempFile = new File("temp.txt");
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-            BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()));
+        File tempFile = new File("temp.txt");
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+            BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()))) {
+
             String currentLine;
 
             while ((currentLine = reader.readLine()) != null) {
@@ -61,35 +56,31 @@ public abstract class BaseFileDictionary implements DictionaryRepository {
             oldFile.delete();
             tempFile.renameTo(oldFile);
             return found;
-        } catch (IOException e) {
-            throw new RemoveEntryException(e.getMessage());
         }
     }
 
     @Override
-    public Optional<String> searchEntryByKey(String key) {
-        try (Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
-            return stream.filter(s -> s.startsWith(key + " ")).findFirst();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+    public Optional<KeyValuePair> searchEntryByKey(String key) throws IOException {
+        try(Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
+            return stream.filter(s -> s.startsWith(key + " ")).findFirst().map(s ->{
+                String[] parts = s.split(" ", 2);
+                return new KeyValuePair(parts[0], parts[1]);
+            });
         }
     }
 
     @Override
-    public void addEntry(String key, String value) {
-        String entry = key + " " + value + System.lineSeparator();
-        try {
-            Files.write(dectionaryPath, entry.getBytes(), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            throw new AddEntryException();
-        }
+    public KeyValuePair addEntry(KeyValuePair keyValuePair) throws IOException {
+        String entry = keyValuePair.getKey() + " " + keyValuePair.getValue() + System.lineSeparator();
+        Files.write(dectionaryPath, entry.getBytes(), StandardOpenOption.APPEND);
+        return keyValuePair;
     }
 
     @Override
-    public KeyValuePairGroup pagination(int page, int size) {
+    public KeyValuePairGroup pagination(int page, int size) throws IOException {
         KeyValuePairGroup result = new KeyValuePairGroup();
         List<KeyValuePair> items = new ArrayList<>();
-        int totalPages = 0;
+        int totalPages;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()))) {
             int totalLines = (int) Files.lines(dectionaryPath, Charset.defaultCharset()).count();
@@ -116,8 +107,6 @@ public abstract class BaseFileDictionary implements DictionaryRepository {
                 items.add(item);
                 currentLine++;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         result.setDictionary(items);

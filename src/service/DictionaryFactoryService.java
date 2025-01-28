@@ -19,18 +19,18 @@ public class DictionaryFactoryService {
     public DictionaryService createService(DictionaryType type) {
         switch (type) {
             case LATIN:
-                return new LatinDictionaryService(
-                        new LatinDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.LATIN))),
+                return new LatinDictionaryServiceBase(
+                        new LatinDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.LATIN))),
                         new LatinValidation()
                 );
             case NUMBER:
-                return new NumberDictionaryService(
-                        new NumberDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.NUMBER))),
+                return new NumberDictionaryServiceBase(
+                        new NumberDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.NUMBER))),
                         new NumberValidation()
                 );
             case BACKSPACE:
-                return new BackspaceDictionaryService(
-                        new BackspaceDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.BACKSPACE))),
+                return new BackspaceDictionaryServiceBase(
+                        new BackspaceDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.BACKSPACE))),
                         new BackspaceValidation()
                 );
             default:

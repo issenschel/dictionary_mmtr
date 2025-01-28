@@ -1,6 +1,6 @@
 package repository;
 
-import exception.RemoveEntryException;
+import pojo.KeyValuePair;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -9,19 +9,18 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class BackspaceDictionaryRepository extends BaseFileDictionary {
-    public BackspaceDictionaryRepository(Path dectionaryPath) {
+public class BackspaceDictionaryRepositoryRepository extends BaseFileDictionaryRepository {
+    public BackspaceDictionaryRepositoryRepository(Path dectionaryPath) {
         super(dectionaryPath);
     }
 
     @Override
-    public boolean removeEntryByKey(String key) {
+    public boolean removeEntryByKey(String key) throws IOException {
         boolean found = false;
         String processedKey = processKey(key);
-        try {
-            File tempFile = new File("temp.txt");
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-            BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()));
+        File tempFile = new File("temp.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+             BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()))) {
             String currentLine;
 
             while ((currentLine = reader.readLine()) != null) {
@@ -37,18 +36,17 @@ public class BackspaceDictionaryRepository extends BaseFileDictionary {
             oldFile.delete();
             tempFile.renameTo(oldFile);
             return found;
-        } catch (IOException e) {
-            throw new RemoveEntryException(e.getMessage());
         }
     }
 
     @Override
-    public Optional<String> searchEntryByKey(String key) {
+    public Optional<KeyValuePair> searchEntryByKey(String key) throws IOException {
         String processedKey = processKey(key);
         try (Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
-            return stream.filter(s -> processKey(s.substring(0, s.indexOf(' '))).equals(processedKey)).findFirst();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            return stream.filter(s -> processKey(s.substring(0, s.indexOf(' '))).equals(processedKey)).findFirst().map(s -> {
+                String[] split = s.split(" ");
+                return new KeyValuePair(split[0], split[1]);
+            });
         }
     }
 
