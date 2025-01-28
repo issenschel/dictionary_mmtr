@@ -1,6 +1,6 @@
 package utils;
 
-import enums.DectionaryType;
+import enums.DictionaryType;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class ConfigLoader {
         }
     }
 
-    public String getDictionaryValue(DectionaryType type) {
+    public String getDictionaryValue(DictionaryType type) {
         return props.getProperty(type.getDescription());
     }
 }

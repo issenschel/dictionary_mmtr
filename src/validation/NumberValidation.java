@@ -1,6 +1,7 @@
 package validation;
 
 public class NumberValidation implements Validation {
+
     public boolean validate(String input){
         return input.matches("[0-9]+") && input.length() == 5;
     }

@@ -1,36 +1,26 @@
 package menu;
 
-import enums.DectionaryType;
-import repository.FileDictionaryRepository;
-import service.DictionaryService;
-import service.FileDictionaryService;
+import enums.DictionaryType;
+import service.*;
+import service.DictionaryFactoryService;
 import utils.ClearConsole;
-import utils.ConfigLoader;
-import validation.LatinValidation;
-import validation.NumberValidation;
-import validation.Validation;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class DictionarySelector {
     private final Scanner console = new Scanner(System.in);
     private final DictionaryService latinService;
     private final DictionaryService numberService;
+    private final DictionaryService backspaceService;
     private DictionaryDisplay dictionaryDisplay;
 
     public DictionarySelector() {
-        ConfigLoader configLoader = new ConfigLoader();
-
-        latinService = createService(Paths.get(configLoader.getDictionaryValue(DectionaryType.LATIN)), new LatinValidation());
-        numberService = createService(Paths.get(configLoader.getDictionaryValue(DectionaryType.NUMBER)), new NumberValidation());
+        DictionaryFactoryService serviceFactory = new DictionaryFactoryService();
+        latinService = serviceFactory.createService(DictionaryType.LATIN);
+        numberService = serviceFactory.createService(DictionaryType.NUMBER);
+        backspaceService = serviceFactory.createService(DictionaryType.BACKSPACE);
     }
 
-    private FileDictionaryService createService(Path dictionaryPath, Validation validation) {
-        FileDictionaryRepository repository = new FileDictionaryRepository(dictionaryPath);
-        return new FileDictionaryService(repository, validation);
-    }
 
     public void selectDictionary() {
         boolean exit = true;
@@ -39,20 +29,20 @@ public class DictionarySelector {
             System.out.println("Выберите словарь, с которым будете работать:\n" +
                                "1: Слово - перевод на русский\n" +
                                "2: Цифры - перевод на русский\n" +
+                               "3: Слово - перевод на русский. Включён знак # - backspace\n" +
                                "0: Завершение программы");
             System.out.print("Введите число: ");
             String choiceDictionary = console.nextLine();
 
             switch (choiceDictionary) {
                 case "1":
-                    setDictionaryDisplay(latinService);
-                    ClearConsole.clear();
-                    dictionaryDisplay.manageDictionary();
+                    manageDictionary(latinService);
                     break;
                 case "2":
-                    setDictionaryDisplay(numberService);
-                    ClearConsole.clear();
-                    dictionaryDisplay.manageDictionary();
+                    manageDictionary(numberService);
+                    break;
+                case "3":
+                    manageDictionary(backspaceService);
                     break;
                 case "0":
                     exit = false;
@@ -64,7 +54,13 @@ public class DictionarySelector {
         }
     }
 
-    private void setDictionaryDisplay(DictionaryService service){
-        this.dictionaryDisplay = new DictionaryDisplay(console,service);
+    private void manageDictionary(DictionaryService service) {
+        setDictionaryDisplay(service);
+        ClearConsole.clear();
+        dictionaryDisplay.manageDictionary();
+    }
+
+    private void setDictionaryDisplay(DictionaryService service) {
+        this.dictionaryDisplay = new DictionaryDisplay(console, service);
     }
 }

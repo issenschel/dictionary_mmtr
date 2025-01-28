@@ -1,12 +1,15 @@
 package repository;
 
-import dto.DictionaryDto;
+import pojo.KeyValuePair;
+import pojo.KeyValuePairGroup;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DictionaryRepository {
-    List<DictionaryDto> findAll();
+    List<KeyValuePair> findAll();
+    KeyValuePairGroup pagination(int page, int size);
     boolean removeEntryByKey(String key);
-    String searchEntryByKey(String key);
+    Optional<String> searchEntryByKey(String key);
     void addEntry(String key, String value);
 }

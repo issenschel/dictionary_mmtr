@@ -1,12 +1,13 @@
 package enums;
 
-public enum DectionaryType {
+public enum DictionaryType {
     LATIN("dictionary_latin"),
-    NUMBER("dictionary_number");
+    NUMBER("dictionary_number"),
+    BACKSPACE("dictionary_backspace");
 
     private final String description;
 
-    DectionaryType(String description) {
+    DictionaryType(String description) {
         this.description = description;
     }
 

@@ -1,10 +1,10 @@
-package dto;
+package pojo;
 
-public class DictionaryDto {
+public class KeyValuePair {
     private String key;
     private String value;
 
-    public DictionaryDto(String key, String value) {
+    public KeyValuePair(String key, String value) {
         this.key = key;
         this.value = value;
     }

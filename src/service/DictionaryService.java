@@ -1,12 +1,14 @@
 package service;
 
-import dto.DictionaryDto;
+import pojo.KeyValuePair;
+import pojo.KeyValuePairGroup;
 
 import java.util.List;
 
 public interface DictionaryService {
-   List<DictionaryDto> findAll();
+   List<KeyValuePair> findAll();
    void removeEntryByKey(String key);
    void searchEntryByKey(String key);
    void addEntry(String key, String value);
+   KeyValuePairGroup pagination(int page, int size);
 }
