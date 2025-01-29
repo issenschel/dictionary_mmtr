@@ -8,9 +8,9 @@ import validation.Validation;
 
 import java.io.IOException;
 
-public class BackspaceDictionaryServiceBase extends BaseFileDictionaryService {
+public class UniqueDictionaryService extends BaseFileDictionaryService {
 
-    public BackspaceDictionaryServiceBase(DictionaryRepository DictionaryRepository, Validation validation) {
+    public UniqueDictionaryService(DictionaryRepository DictionaryRepository, Validation validation) {
         super(DictionaryRepository, validation);
     }
 

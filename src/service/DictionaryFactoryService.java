@@ -1,11 +1,12 @@
 package service;
 
 import enums.DictionaryType;
-import repository.*;
+import repository.BaseFileDictionaryRepository;
 import utils.ConfigLoader;
 import validation.BackspaceValidation;
 import validation.LatinValidation;
 import validation.NumberValidation;
+import validation.Validation;
 
 import java.nio.file.Paths;
 
@@ -17,22 +18,24 @@ public class DictionaryFactoryService {
     }
 
     public DictionaryService createService(DictionaryType type) {
+        Validation validation;
+
         switch (type) {
             case LATIN:
-                return new LatinDictionaryServiceBase(
-                        new LatinDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.LATIN))),
-                        new LatinValidation()
-                );
+                validation = new LatinValidation();
+                return new DuplicateDictionaryServiceBase(
+                        new BaseFileDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.LATIN)),
+                                validation.getKeyTransformer()), validation);
             case NUMBER:
-                return new NumberDictionaryServiceBase(
-                        new NumberDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.NUMBER))),
-                        new NumberValidation()
-                );
+                validation = new NumberValidation();
+                return new DuplicateDictionaryServiceBase(
+                        new BaseFileDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.NUMBER)),
+                                validation.getKeyTransformer()), validation);
             case BACKSPACE:
-                return new BackspaceDictionaryServiceBase(
-                        new BackspaceDictionaryRepositoryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.BACKSPACE))),
-                        new BackspaceValidation()
-                );
+                validation = new BackspaceValidation();
+                return new UniqueDictionaryService(
+                        new BaseFileDictionaryRepository(Paths.get(configLoader.getDictionaryValue(DictionaryType.BACKSPACE)),
+                                validation.getKeyTransformer()), validation);
             default:
                 throw new IllegalArgumentException("Неподдерживаемый тип словаря: " + type);
         }

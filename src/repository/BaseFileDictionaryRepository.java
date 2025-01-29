@@ -8,21 +8,22 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseFileDictionaryRepository implements DictionaryRepository {
+public class BaseFileDictionaryRepository implements DictionaryRepository {
 
-    protected final Path dectionaryPath;
+    private final Path dectionaryPath;
+    private final Function<String, String> keyTransformer;
 
-    public BaseFileDictionaryRepository(Path dectionaryPath) {
+    public BaseFileDictionaryRepository(Path dectionaryPath, Function<String, String> keyTransformer) {
         this.dectionaryPath = dectionaryPath;
+        this.keyTransformer = keyTransformer;
     }
 
-    @Override
     public List<KeyValuePair> findAll() throws IOException {
         try (Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
             return stream.map(line -> {
@@ -32,9 +33,9 @@ public abstract class BaseFileDictionaryRepository implements DictionaryReposito
         }
     }
 
-    @Override
     public boolean removeEntryByKey(String key) throws IOException {
         boolean found = false;
+        String processedKey = this.keyTransformer.apply(key);
         File tempFile = new File("temp.txt");
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
             BufferedReader reader = new BufferedReader(new FileReader(dectionaryPath.toFile()))) {
@@ -42,7 +43,8 @@ public abstract class BaseFileDictionaryRepository implements DictionaryReposito
             String currentLine;
 
             while ((currentLine = reader.readLine()) != null) {
-                if (!currentLine.startsWith(key)) {
+                String lineKey = currentLine.substring(0, currentLine.indexOf(' '));
+                if (!this.keyTransformer.apply(lineKey).equals(processedKey)) {
                     writer.write(currentLine + System.lineSeparator());
                 } else {
                     found = true;
@@ -59,24 +61,22 @@ public abstract class BaseFileDictionaryRepository implements DictionaryReposito
         }
     }
 
-    @Override
     public Optional<KeyValuePair> searchEntryByKey(String key) throws IOException {
+        String processedKey = this.keyTransformer.apply(key);
         try(Stream<String> stream = Files.lines(dectionaryPath, Charset.defaultCharset())) {
-            return stream.filter(s -> s.startsWith(key + " ")).findFirst().map(s ->{
+            return stream.filter(s -> this.keyTransformer.apply(s.substring(0, s.indexOf(' '))).equals(processedKey)).findFirst().map(s ->{
                 String[] parts = s.split(" ", 2);
                 return new KeyValuePair(parts[0], parts[1]);
             });
         }
     }
 
-    @Override
     public KeyValuePair addEntry(KeyValuePair keyValuePair) throws IOException {
         String entry = keyValuePair.getKey() + " " + keyValuePair.getValue() + System.lineSeparator();
         Files.write(dectionaryPath, entry.getBytes(), StandardOpenOption.APPEND);
         return keyValuePair;
     }
 
-    @Override
     public KeyValuePairGroup getPage(int page, int size) throws IOException {
         KeyValuePairGroup result = new KeyValuePairGroup();
         List<KeyValuePair> items;

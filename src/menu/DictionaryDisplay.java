@@ -1,16 +1,9 @@
 package menu;
 
-import org.w3c.dom.Document;
 import pojo.KeyValuePair;
 import pojo.KeyValuePairGroup;
 import service.DictionaryService;
 
-import javax.swing.text.BadLocationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Scanner;
 
@@ -25,9 +18,9 @@ public class DictionaryDisplay {
         this.dictionaryService = dictionaryService;
     }
 
-    public void manageDictionary(){
+    public void manageDictionary() {
         boolean exit = true;
-        while (exit){
+        while (exit) {
             System.out.println("Выберите что вы хотите сделать:\n" +
                                "1 - Список записей\n" +
                                "2 - Список записей пагинацией\n" +
@@ -67,7 +60,7 @@ public class DictionaryDisplay {
         }
     }
 
-    private void findAll(){
+    private void findAll() {
         System.out.println("Вот весь список:");
         try {
             List<KeyValuePair> keyValuePairs = dictionaryService.findAll();
@@ -79,24 +72,26 @@ public class DictionaryDisplay {
         }
     }
 
-    private void pagination(){
+    private void pagination() {
         System.out.println("Введите страницу:");
         String page = console.nextLine();
         System.out.println("Введите количество элементов:");
         String size = console.nextLine();
         System.out.println("Список:");
         try {
-            KeyValuePairGroup dictionaryPOJOList = dictionaryService.getPage(Integer.parseInt(page),Integer.parseInt(size));
+            KeyValuePairGroup dictionaryPOJOList = dictionaryService.getPage(Integer.parseInt(page), Integer.parseInt(size));
             for (KeyValuePair keyValuePair : dictionaryPOJOList.getDictionary()) {
                 System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
             }
             System.out.println("Количество страниц: " + dictionaryPOJOList.getCount());
+        } catch (NumberFormatException e) {
+            System.out.println("Страница и количество элементов должно быть числом");
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private void searchEntryByKey(){
+    private void searchEntryByKey() {
         System.out.println("Введите ключ для поиска");
         key = console.nextLine();
         try {
@@ -107,45 +102,35 @@ public class DictionaryDisplay {
         }
     }
 
-    private void addEntry(){
+    private void addEntry() {
         System.out.println("Введите ключ для добавления записи");
         key = console.nextLine();
         System.out.println("Введите значение перевода");
-        String name= console.nextLine();
+        String name = console.nextLine();
         try {
-            KeyValuePair keyValuePair = dictionaryService.addEntry(key,name);
+            KeyValuePair keyValuePair = dictionaryService.addEntry(key, name);
             System.out.println(keyValuePair.getKey() + " " + keyValuePair.getValue());
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private void removeEntry(){
+    private void removeEntry() {
         System.out.print("Введите ключ для удаления записи: ");
         key = console.nextLine();
         try {
             System.out.println(dictionaryService.removeEntryByKey(key));
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
     }
 
     private void getDictionaryAsXML() {
-        try(StringWriter stringWriter = new StringWriter()) {
-            Document document = dictionaryService.getDictionaryAsXML();
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-            DOMSource source = new DOMSource(document);
-            StreamResult result = new StreamResult(stringWriter);
-            transformer.transform(source, result);
-            System.out.println(stringWriter);
+        try {
+            System.out.println(dictionaryService.getDictionaryAsXML());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
-
 
 }

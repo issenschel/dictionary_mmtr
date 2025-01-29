@@ -1,10 +1,8 @@
 import menu.DictionarySelector;
 import utils.ConfigLoader;
 
-import java.io.IOException;
-
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new ConfigLoader();
         new DictionarySelector().selectDictionary();
     }
