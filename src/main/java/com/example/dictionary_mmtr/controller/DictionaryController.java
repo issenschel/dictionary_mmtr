@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.IOException;
-
 @RestController
 @RequestMapping("/dictionary")
 public class DictionaryController {
@@ -34,44 +32,35 @@ public class DictionaryController {
     @GetMapping()
     public KeyValuePairGroupDto getDictionary(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
                                               @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(name = "size", defaultValue = "1") @Min(1) int size){
-        return dictionaryFactoryService.getService(dictionaryType).getPage(page,size);
+                                              @RequestParam(name = "size", defaultValue = "1") @Min(1) int size) {
+        return dictionaryFactoryService.getService(dictionaryType).getPage(page, size);
     }
 
     @GetMapping("/xml")
     public ResponseEntity<StreamingResponseBody> getDictionaryByXml(@ModelAttribute("dictionaryType") DictionaryType dictionaryType) {
-        StreamingResponseBody responseBody = outputStream -> {
-            try {
-                outputStream.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<users>\n".getBytes());
-                dictionaryFactoryService.getService(dictionaryType).getDictionaryAsXML(outputStream);
-                outputStream.write("\n</users>".getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException("Error while writing XML", e);
-            }
-        };
-
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_XML)
-                .body(responseBody);
+                .body(outputStream -> dictionaryFactoryService.getService(dictionaryType).getDictionaryAsXML(outputStream));
     }
+
 
     @GetMapping("/find")
     public KeyValuePairDto getEntryByKey(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                         @RequestParam("key") String key){
+                                         @RequestParam("key") String key) {
         return dictionaryFactoryService.getService(dictionaryType).searchEntryByKey(key);
     }
 
 
     @PostMapping()
     public KeyValuePairDto addEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                    @RequestBody KeyValuePairRequestDto keyValuePairRequestDto){
+                                    @RequestBody KeyValuePairRequestDto keyValuePairRequestDto) {
         return dictionaryFactoryService.getService(dictionaryType).addEntry(keyValuePairRequestDto.getKey(), keyValuePairRequestDto.getValue());
     }
 
 
     @DeleteMapping()
     public ResponseDto deleteEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                   @RequestParam("key") String key){
+                                   @RequestParam("key") String key) {
         return dictionaryFactoryService.getService(dictionaryType).removeEntryByKey(key);
     }
 

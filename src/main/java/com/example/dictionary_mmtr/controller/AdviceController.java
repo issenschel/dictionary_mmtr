@@ -29,7 +29,7 @@ public class AdviceController {
 
     @ExceptionHandler(DictionaryException.class)
     public ResponseEntity<ResponseDto> dictionaryException(DictionaryException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDto(e.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
     }
 
     @ExceptionHandler(KeyNotFoundException.class)
@@ -44,7 +44,12 @@ public class AdviceController {
 
     @ExceptionHandler(RemoveEntryException.class)
     public ResponseEntity<ResponseDto> removeEntryException(RemoveEntryException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
+    }
+
+    @ExceptionHandler(AddEntryException.class)
+    public ResponseEntity<ResponseDto> addEntryException(AddEntryException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
     }
 
     @ExceptionHandler(ValidationException.class)
@@ -52,6 +57,10 @@ public class AdviceController {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
     }
 
+    private String getLanguageTypeFromRequest(String e) {
+        Locale locale = LocaleContextHolder.getLocale();
+        return messageSource.getMessage(e, null, locale);
+    }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ResponseDto> handleMethodNotSupported(HttpRequestMethodNotSupportedException e, Locale locale) {
@@ -86,21 +95,16 @@ public class AdviceController {
     public ResponseEntity<ResponseDto> handleConversionFailedException(ConversionFailedException ex, Locale locale) {
         Throwable cause = ex.getCause();
         if (cause instanceof InvalidEnumValueException) {
-            InvalidEnumValueException invalidEnumException = (InvalidEnumValueException) cause;
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(invalidEnumException.getMessage()));
+            return handleInvalidEnumValueException((InvalidEnumValueException) cause, locale);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(messageSource.getMessage("error.conversion.failed", null, locale)));
     }
 
     @ExceptionHandler(InvalidEnumValueException.class)
-    public ResponseEntity<ResponseDto> handleInvalidEnumValueException(InvalidEnumValueException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(ex.getMessage()));
+    public ResponseEntity<ResponseDto> handleInvalidEnumValueException(InvalidEnumValueException ex, Locale locale) {
+        String errorMessage = messageSource.getMessage("error.invalid.enum.value",
+                new Object[]{ex.getInvalidValue(), InvalidEnumValueException.getValidValues(ex.getEnumType())}, locale);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(errorMessage));
     }
 
-
-    private String getLanguageTypeFromRequest(String e) {
-        Locale locale = LocaleContextHolder.getLocale();
-        return messageSource.getMessage(e, null, locale);
-
-    }
 }

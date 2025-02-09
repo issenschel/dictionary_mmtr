@@ -1,7 +1,7 @@
 package com.example.dictionary_mmtr.service;
 
 import com.example.dictionary_mmtr.dto.KeyValuePairDto;
-import com.example.dictionary_mmtr.exception.DictionaryException;
+import com.example.dictionary_mmtr.exception.AddEntryException;
 import com.example.dictionary_mmtr.exception.KeyFoundException;
 import com.example.dictionary_mmtr.repository.DictionaryRepository;
 import com.example.dictionary_mmtr.validation.Validation;
@@ -28,7 +28,7 @@ public class UniqueDictionaryService extends BaseFileDictionaryService {
             KeyValuePairDto keyValuePairDto = new KeyValuePairDto(key, value);
             return dictionaryRepository.addEntry(keyValuePairDto);
         } catch (IOException e) {
-            throw new DictionaryException(e.getMessage());
+            throw new AddEntryException(e.getMessage());
         }
     }
 }

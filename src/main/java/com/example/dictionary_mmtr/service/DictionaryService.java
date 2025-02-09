@@ -6,10 +6,8 @@ import com.example.dictionary_mmtr.dto.ResponseDto;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
 
 public interface DictionaryService {
-    List<KeyValuePairDto> findAll();
 
     ResponseDto removeEntryByKey(String key);
 

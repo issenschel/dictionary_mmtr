@@ -1,6 +1,7 @@
 package com.example.dictionary_mmtr.service;
 
 import com.example.dictionary_mmtr.enums.DictionaryType;
+import com.example.dictionary_mmtr.exception.InvalidEnumValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class DictionaryFactoryService {
             case BACKSPACE:
                 return backspaceService;
             default:
-                throw new IllegalArgumentException("Некорректный тип словаря: " + dictionaryType);
+                throw new InvalidEnumValueException("dictionary", dictionaryType.getDeclaringClass());
         }
     }
 }

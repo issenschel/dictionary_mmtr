@@ -2,20 +2,19 @@ package com.example.dictionary_mmtr.service;
 
 import com.example.dictionary_mmtr.dto.KeyValuePairDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairGroupDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairListWrapper;
 import com.example.dictionary_mmtr.dto.ResponseDto;
-import com.example.dictionary_mmtr.exception.DictionaryException;
-import com.example.dictionary_mmtr.exception.KeyNotFoundException;
-import com.example.dictionary_mmtr.exception.ValidationException;
+import com.example.dictionary_mmtr.exception.*;
 import com.example.dictionary_mmtr.repository.DictionaryRepository;
 import com.example.dictionary_mmtr.validation.Validation;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public abstract class BaseFileDictionaryService implements DictionaryService {
     protected final DictionaryRepository dictionaryRepository;
@@ -28,29 +27,19 @@ public abstract class BaseFileDictionaryService implements DictionaryService {
         this.messageSource = messageSource;
     }
 
-    public List<KeyValuePairDto> findAll(){
-        try {
-            return dictionaryRepository.findAll();
-        } catch (IOException e) {
-            throw new DictionaryException(e.getMessage());
-        }
-    }
-
-    public ResponseDto removeEntryByKey(String key){
+    public ResponseDto removeEntryByKey(String key) {
         try {
             validate(key);
             if (!dictionaryRepository.removeEntryByKey(key)) {
                 throw new KeyNotFoundException();
-
             }
             return new ResponseDto(messageSource.getMessage("success.entry.removed", null, LocaleContextHolder.getLocale()));
-
         } catch (IOException e) {
-            throw new DictionaryException(e.getMessage());
+            throw new RemoveEntryException(e.getMessage());
         }
     }
 
-    public KeyValuePairDto searchEntryByKey(String key){
+    public KeyValuePairDto searchEntryByKey(String key) {
         try {
             validate(key);
             return dictionaryRepository.searchEntryByKey(key).orElseThrow(KeyNotFoundException::new);
@@ -59,17 +48,17 @@ public abstract class BaseFileDictionaryService implements DictionaryService {
         }
     }
 
-    public KeyValuePairDto addEntry(String key, String value){
+    public KeyValuePairDto addEntry(String key, String value) {
         try {
             validate(key);
             KeyValuePairDto keyValuePairDto = new KeyValuePairDto(key, value);
             return dictionaryRepository.addEntry(keyValuePairDto);
         } catch (IOException e) {
-            throw new DictionaryException(e.getMessage());
+            throw new AddEntryException(e.getMessage());
         }
     }
 
-    public KeyValuePairGroupDto getPage(int page, int size){
+    public KeyValuePairGroupDto getPage(int page, int size) {
         try {
             return dictionaryRepository.getPage(page, size);
         } catch (IOException e) {
@@ -77,13 +66,32 @@ public abstract class BaseFileDictionaryService implements DictionaryService {
         }
     }
 
-    public void getDictionaryAsXML(OutputStream outputStream) throws DictionaryException, IOException {
-        List<KeyValuePairDto> entries = findAll();
-        KeyValuePairListWrapper wrapper = new KeyValuePairListWrapper(entries);
-        XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.writeValue(outputStream, wrapper);
+    public void getDictionaryAsXML(OutputStream outputStream) {
+        try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
+            writeString(bufferedOutputStream, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<dictionary>\n");
+
+            try (Stream<KeyValuePairDto> stream = dictionaryRepository.findAll()) {
+                XmlMapper xmlMapper = new XmlMapper();
+                stream.forEach(entry -> {
+                    try {
+                        String xmlEntry = xmlMapper.writeValueAsString(entry);
+                        writeString(bufferedOutputStream, xmlEntry);
+                    } catch (IOException e) {
+                        throw new DictionaryException(e.getMessage());
+                    }
+                });
+            }
+
+            writeString(bufferedOutputStream, "</dictionary>");
+        } catch (IOException e) {
+            throw new DictionaryException(e.getMessage());
+        }
     }
 
+    private void writeString(BufferedOutputStream bufferedOutputStream, String data) throws IOException {
+        bufferedOutputStream.write(data.getBytes(StandardCharsets.UTF_8));
+        bufferedOutputStream.write("\n".getBytes(StandardCharsets.UTF_8));
+    }
 
     protected void validate(String key) {
         if (!validation.validate(key)) {
