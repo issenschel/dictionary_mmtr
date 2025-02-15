@@ -22,7 +22,9 @@
             <param-name>contextConfigLocation</param-name>
             <param-value>
                 com.example.dictionary_mmtr.config.AppConfig,
-                com.example.dictionary_mmtr.config.SecurityConfig
+                com.example.dictionary_mmtr.config.WebConfig,
+                com.example.dictionary_mmtr.config.SecurityConfig,
+                com.example.dictionary_mmtr.config.PostgreSQLConfig
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

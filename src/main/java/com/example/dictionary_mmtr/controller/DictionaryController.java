@@ -1,11 +1,12 @@
 package com.example.dictionary_mmtr.controller;
 
-import com.example.dictionary_mmtr.dto.KeyValuePairDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairGroupDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
 import com.example.dictionary_mmtr.dto.ResponseDto;
+import com.example.dictionary_mmtr.entity.BaseDictionary;
 import com.example.dictionary_mmtr.enums.DictionaryType;
 import com.example.dictionary_mmtr.service.DictionaryFactoryService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,20 +44,17 @@ public class DictionaryController {
                 .body(outputStream -> dictionaryFactoryService.getService(dictionaryType).getDictionaryAsXML(outputStream));
     }
 
-
     @GetMapping("/find")
-    public KeyValuePairDto getEntryByKey(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                         @RequestParam("key") String key) {
+    public BaseDictionary getEntryByKey(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
+                                        @RequestParam("key") String key) {
         return dictionaryFactoryService.getService(dictionaryType).searchEntryByKey(key);
     }
 
-
     @PostMapping()
-    public KeyValuePairDto addEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                    @RequestBody KeyValuePairRequestDto keyValuePairRequestDto) {
-        return dictionaryFactoryService.getService(dictionaryType).addEntry(keyValuePairRequestDto.getKey(), keyValuePairRequestDto.getValue());
+    public BaseDictionary addEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
+                                   @RequestBody @Valid KeyValuePairRequestDto keyValuePairRequestDto) {
+        return dictionaryFactoryService.getService(dictionaryType).addEntry(keyValuePairRequestDto);
     }
-
 
     @DeleteMapping()
     public ResponseDto deleteEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
