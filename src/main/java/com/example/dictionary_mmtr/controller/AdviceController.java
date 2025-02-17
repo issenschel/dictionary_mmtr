@@ -27,6 +27,11 @@ public class AdviceController {
         this.messageSource = messageSource;
     }
 
+    @ExceptionHandler(DictionaryNotFoundException.class)
+    public ResponseEntity<ResponseDto> dictionaryNotFoundException(DictionaryNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
+    }
+
     @ExceptionHandler(DictionaryException.class)
     public ResponseEntity<ResponseDto> dictionaryException(DictionaryException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
@@ -42,6 +47,11 @@ public class AdviceController {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
     }
 
+    @ExceptionHandler(DictionaryFoundException.class)
+    public ResponseEntity<ResponseDto> dictionaryFoundException(DictionaryFoundException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
+    }
+
     @ExceptionHandler(RemoveEntryException.class)
     public ResponseEntity<ResponseDto> removeEntryException(RemoveEntryException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
@@ -54,7 +64,7 @@ public class AdviceController {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ResponseDto> validationException(ValidationException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
     }
 
     private String getLanguageTypeFromRequest(String e) {
@@ -83,9 +93,6 @@ public class AdviceController {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ResponseDto> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, Locale locale) {
-        if (ex.getCause() instanceof ConversionFailedException) {
-            return handleConversionFailedException((ConversionFailedException) ex.getCause(), locale);
-        }
         String errorMessage = messageSource.getMessage("error.method.argument.type.mismatch",
                 new Object[]{ex.getName(), ex.getRequiredType().getSimpleName()}, locale);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(errorMessage));
@@ -93,18 +100,7 @@ public class AdviceController {
 
     @ExceptionHandler(ConversionFailedException.class)
     public ResponseEntity<ResponseDto> handleConversionFailedException(ConversionFailedException ex, Locale locale) {
-        Throwable cause = ex.getCause();
-        if (cause instanceof InvalidEnumValueException) {
-            return handleInvalidEnumValueException((InvalidEnumValueException) cause, locale);
-        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(messageSource.getMessage("error.conversion.failed", null, locale)));
-    }
-
-    @ExceptionHandler(InvalidEnumValueException.class)
-    public ResponseEntity<ResponseDto> handleInvalidEnumValueException(InvalidEnumValueException ex, Locale locale) {
-        String errorMessage = messageSource.getMessage("error.invalid.enum.value",
-                new Object[]{ex.getInvalidValue(), InvalidEnumValueException.getValidValues(ex.getEnumType())}, locale);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(errorMessage));
     }
 
 }

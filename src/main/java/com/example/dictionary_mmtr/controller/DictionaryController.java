@@ -1,66 +1,66 @@
 package com.example.dictionary_mmtr.controller;
 
+import com.example.dictionary_mmtr.annotation.AdminAccess;
 import com.example.dictionary_mmtr.dto.KeyValuePairGroupDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
 import com.example.dictionary_mmtr.dto.ResponseDto;
 import com.example.dictionary_mmtr.entity.BaseDictionary;
-import com.example.dictionary_mmtr.enums.DictionaryType;
-import com.example.dictionary_mmtr.service.DictionaryFactoryService;
+import com.example.dictionary_mmtr.service.BaseDictionaryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
-@RequestMapping("/dictionary")
+@RequestMapping("/dictionaries")
+@RequiredArgsConstructor
 public class DictionaryController {
 
-    private final DictionaryFactoryService dictionaryFactoryService;
-
-
-    public DictionaryController(DictionaryFactoryService dictionaryFactoryService) {
-        this.dictionaryFactoryService = dictionaryFactoryService;
-    }
+    private final BaseDictionaryService dictionaryService;
 
     @ModelAttribute("dictionaryType")
-    public DictionaryType getDictionaryType(@RequestParam(name = "dictionary", defaultValue = "LATIN") DictionaryType dictionaryType) {
+    public String getDictionaryType(@RequestParam(name = "dictionaryType", defaultValue = "latin") String dictionaryType) {
         return dictionaryType;
     }
 
-
-    @GetMapping()
-    public KeyValuePairGroupDto getDictionary(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                              @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(name = "size", defaultValue = "1") @Min(1) int size) {
-        return dictionaryFactoryService.getService(dictionaryType).getPage(page, size);
+    @GetMapping("/entries")
+    public KeyValuePairGroupDto getDictionaryEntries(
+            @ModelAttribute("dictionaryType") String dictionaryType,
+            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
+            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size) {
+        return dictionaryService.getDictionaryEntries(dictionaryType, page, size);
     }
 
-    @GetMapping("/xml")
-    public ResponseEntity<StreamingResponseBody> getDictionaryByXml(@ModelAttribute("dictionaryType") DictionaryType dictionaryType) {
+    @GetMapping(value = "/entries/export", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<StreamingResponseBody> exportDictionaryToXml(
+            @ModelAttribute("dictionaryType") String dictionaryType) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_XML)
-                .body(outputStream -> dictionaryFactoryService.getService(dictionaryType).getDictionaryAsXML(outputStream));
+                .body(outputStream -> dictionaryService.exportDictionaryToXml(dictionaryType, outputStream));
     }
 
-    @GetMapping("/find")
-    public BaseDictionary getEntryByKey(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                        @RequestParam("key") String key) {
-        return dictionaryFactoryService.getService(dictionaryType).searchEntryByKey(key);
+    @GetMapping("/entries/search")
+    public BaseDictionary getDictionaryEntryByKey(
+            @ModelAttribute("dictionaryType") String dictionaryType,
+            @RequestParam(name = "key") String key) {
+        return dictionaryService.findDictionaryEntryByKey(dictionaryType, key);
     }
 
-    @PostMapping()
-    public BaseDictionary addEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                   @RequestBody @Valid KeyValuePairRequestDto keyValuePairRequestDto) {
-        return dictionaryFactoryService.getService(dictionaryType).addEntry(keyValuePairRequestDto);
+    @PostMapping("/entries")
+    public BaseDictionary addDictionaryEntry(
+            @ModelAttribute("dictionaryType") String dictionaryType,
+            @RequestBody @Valid KeyValuePairRequestDto keyValuePairRequestDto) {
+        return dictionaryService.addDictionaryEntry(dictionaryType, keyValuePairRequestDto);
     }
 
-    @DeleteMapping()
-    public ResponseDto deleteEntry(@ModelAttribute("dictionaryType") DictionaryType dictionaryType,
-                                   @RequestParam("key") String key) {
-        return dictionaryFactoryService.getService(dictionaryType).removeEntryByKey(key);
+    @DeleteMapping("/entries")
+    @AdminAccess
+    public ResponseDto deleteDictionaryEntry(
+            @ModelAttribute("dictionaryType") String dictionaryType,
+            @RequestParam("key") String key) {
+        return dictionaryService.removeDictionaryEntryByKey(dictionaryType, key);
     }
-
-
 }

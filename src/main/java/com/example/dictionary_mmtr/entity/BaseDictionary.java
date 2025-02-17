@@ -2,22 +2,14 @@ package com.example.dictionary_mmtr.entity;
 
 import lombok.Data;
 
-import javax.persistence.*;
+import java.util.List;
 
-@MappedSuperclass
 @Data
-public abstract class BaseDictionary {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class BaseDictionary {
+
     private Integer id;
 
-    @Column(name = "key")
     private String key;
 
-    @Column(name = "value")
-    private String value;
-
-    @Column(name = "deleted")
-    private Boolean deleted = false;
+    private List<String> values;
 }

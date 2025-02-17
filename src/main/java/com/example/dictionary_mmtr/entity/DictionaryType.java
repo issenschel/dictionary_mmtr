@@ -1,5 +1,6 @@
 package com.example.dictionary_mmtr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -16,7 +17,16 @@ public class DictionaryType {
     @Column(name = "name")
     private String name;
 
+    @JsonIgnore
     @Column(name = "deleted")
     private Boolean deleted = false;
+
+    @JsonIgnore
+    @Column(name = "regex_pattern")
+    private String regexPattern;
+
+    @JsonIgnore
+    @Column(name = "filter_sql")
+    private String filterSQL;
 
 }
