@@ -30,8 +30,11 @@ public class DictionaryController {
     public KeyValuePairGroupDto getDictionaryEntries(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size) {
-        return dictionaryService.getDictionaryEntries(dictionaryType, page, size);
+            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size,
+            @RequestParam(name = "keyFilter", required = false) String keyFilter,
+            @RequestParam(name = "valueFilter", required = false) String valueFilter,
+            @RequestParam(name = "searchAllDictionaries", defaultValue = "false") boolean searchAllDictionaries) {
+        return dictionaryService.getDictionaryEntries(dictionaryType, page, size, keyFilter, valueFilter, searchAllDictionaries);
     }
 
     @GetMapping(value = "/entries/export", produces = MediaType.APPLICATION_XML_VALUE)

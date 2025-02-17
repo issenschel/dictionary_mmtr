@@ -54,11 +54,17 @@ public class BaseDictionaryService {
     }
 
 
-    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size) {
+    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size, String keyFilter, String valueFilter, boolean searchAllDictionaries) {
         validateDictionaryType(tableName);
 
         PageRequest pageRequest = PageRequest.of(page - 1, size);
-        Page<BaseDictionary> dictionaryEntries = dictionaryRepository.findAllDictionaryEntries(tableName, pageRequest);
+        Page<BaseDictionary> dictionaryEntries;
+
+        if (searchAllDictionaries) {
+            dictionaryEntries = dictionaryRepository.findAllDictionaryEntriesAcrossAllDictionaries(getActiveDictionaryTypes(),pageRequest, keyFilter, valueFilter);
+        } else {
+            dictionaryEntries = dictionaryRepository.findAllDictionaryEntries(tableName, pageRequest, keyFilter, valueFilter);
+        }
 
         KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
         keyValuePairGroupDto.setDictionary(dictionaryEntries.getContent());

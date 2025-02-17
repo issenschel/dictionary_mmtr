@@ -1,6 +1,7 @@
 package com.example.dictionary_mmtr.repository;
 
 import com.example.dictionary_mmtr.entity.BaseDictionary;
+import com.example.dictionary_mmtr.entity.DictionaryType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import java.sql.Array;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Repository
@@ -64,22 +66,39 @@ public class DictionaryRepository {
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs), key).stream().findFirst();
     }
 
-    public Page<BaseDictionary> findAllDictionaryEntries(String dictionaryName, PageRequest pageRequest) {
+    public Page<BaseDictionary> findAllDictionaryEntries(String dictionaryName, PageRequest pageRequest, String keyFilter, String valueFilter) {
         DictionaryTableNames tableNames = getTableNames(dictionaryName);
 
         String sql = String.format(
                 "SELECT k.id AS key_id, k.key, ARRAY_AGG(v.value) AS values " +
                 "FROM %s k " +
                 "JOIN %s v ON k.id = v.key_id " +
+                "WHERE (?::VARCHAR IS NULL OR k.key = ?::VARCHAR) " +
+                "AND (?::VARCHAR IS NULL OR v.value LIKE ?::VARCHAR) " +
                 "GROUP BY k.id, k.key " +
                 "LIMIT ? OFFSET ?", tableNames.getKeysTableName(), tableNames.getValuesTableName());
 
-        List<BaseDictionary> content = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs), pageRequest.getPageSize(), pageRequest.getOffset());
+        List<BaseDictionary> content = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs),
+                keyFilter, keyFilter, valueFilter, "%" + valueFilter + "%", pageRequest.getPageSize(), pageRequest.getOffset());
 
-        String countSql = String.format("SELECT COUNT(*) FROM %s", tableNames.getKeysTableName());
-        long totalElements = jdbcTemplate.queryForObject(countSql, Long.class);
+        String countSql = String.format(
+                "SELECT COUNT(*) FROM %s k JOIN %s v ON k.id = v.key_id " +
+                "WHERE (?::VARCHAR IS NULL OR k.key = ?::VARCHAR) " +
+                "AND (?::VARCHAR IS NULL OR v.value LIKE ?::VARCHAR)",
+                tableNames.getKeysTableName(), tableNames.getValuesTableName());
+
+        long totalElements = jdbcTemplate.queryForObject(countSql, Long.class, keyFilter, keyFilter, valueFilter, "%" + valueFilter + "%");
 
         return new PageImpl<>(content, pageRequest, totalElements);
+    }
+
+    public Page<BaseDictionary> findAllDictionaryEntriesAcrossAllDictionaries(List<DictionaryType> dictionaryTypes, PageRequest pageRequest, String keyFilter, String valueFilter) {
+
+        List<BaseDictionary> allEntries = dictionaryTypes.stream()
+                .flatMap(dictionary -> findAllDictionaryEntries(dictionary.getName(), pageRequest, keyFilter, valueFilter).stream())
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(allEntries, pageRequest, allEntries.size());
     }
 
     public Stream<BaseDictionary> streamAllDictionaryEntries(String dictionaryName) {
