@@ -1,12 +1,12 @@
 package com.example.dictionary_mmtr.service;
 
 import com.example.dictionary_mmtr.dto.DictionaryTypeDto;
-import com.example.dictionary_mmtr.dto.ResponseDto;
 import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.exception.DictionaryNotFoundException;
 import com.example.dictionary_mmtr.repository.DictionaryTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class DictionaryTypeService {
     private final DictionaryTypeRepository dictionaryTypeRepository;
 
+    @Transactional
     public DictionaryType createDictionaryType(DictionaryTypeDto dictionaryTypeDto) {
         DictionaryType dictionaryType = new DictionaryType();
         dictionaryType.setName(dictionaryTypeDto.getTableName());
@@ -25,11 +26,11 @@ public class DictionaryTypeService {
         return dictionaryTypeRepository.save(dictionaryType);
     }
 
-    public ResponseDto deleteDictionaryType(String dictionaryTypeName) {
+    @Transactional
+    public void deleteDictionaryType(String dictionaryTypeName) {
         DictionaryType dictionaryType = dictionaryTypeRepository.findByName(dictionaryTypeName).orElseThrow(DictionaryNotFoundException::new);
         dictionaryType.setDeleted(true);
         dictionaryTypeRepository.save(dictionaryType);
-        return new ResponseDto("deleted.dictionary.type");
     }
 
     public Optional<DictionaryType> findDictionaryTypeByName(String dictionaryTypeName) {

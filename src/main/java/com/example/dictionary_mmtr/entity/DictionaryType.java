@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Data
@@ -28,5 +29,8 @@ public class DictionaryType {
     @JsonIgnore
     @Column(name = "filter_sql")
     private String filterSQL;
+
+    @OneToMany(mappedBy = "dictionaryType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DictionaryEntry> entries;
 
 }

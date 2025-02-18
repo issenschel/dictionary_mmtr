@@ -1,19 +1,17 @@
 package com.example.dictionary_mmtr.service;
 
-import com.example.dictionary_mmtr.dto.DictionaryTypeDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairGroupDto;
+import com.example.dictionary_mmtr.dto.DictionaryDto;
+import com.example.dictionary_mmtr.dto.KeyValuePairDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
 import com.example.dictionary_mmtr.dto.ResponseDto;
-import com.example.dictionary_mmtr.entity.BaseDictionary;
+import com.example.dictionary_mmtr.entity.DictionaryEntry;
 import com.example.dictionary_mmtr.entity.DictionaryType;
+import com.example.dictionary_mmtr.entity.DictionaryValue;
 import com.example.dictionary_mmtr.exception.*;
-import com.example.dictionary_mmtr.repository.DictionaryRepository;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,82 +20,86 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class BaseDictionaryService {
 
-    private final DictionaryRepository dictionaryRepository;
-    private final MessageSource messageSource;
+    private final DictionaryEntryService dictionaryEntryService;
+    private final DictionaryValueService dictionaryValueService;
     private final DictionaryTypeService dictionaryTypeService;
+    private final MessageSource messageSource;
 
-    @Transactional
-    public DictionaryType createDictionaryTypeWithTable(DictionaryTypeDto dictionaryTypeDto) {
-        dictionaryTypeService.findDictionaryTypeByName(dictionaryTypeDto.getTableName()).ifPresent(t -> {
-            throw new DictionaryFoundException();
-        });
+//    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size, String keyFilter, String valueFilter, boolean searchAllDictionaries) {
+//        validateDictionaryType(tableName);
+//
+//        PageRequest pageRequest = PageRequest.of(page - 1, size);
+//        Page<BaseDictionary> dictionaryEntries;
+//
+//        if (searchAllDictionaries) {
+//            dictionaryEntries = dictionaryRepository.findAllDictionaryEntriesAcrossAllDictionaries(getActiveDictionaryTypes(),pageRequest, keyFilter, valueFilter);
+//        } else {
+//            dictionaryEntries = dictionaryRepository.findAllDictionaryEntries(tableName, pageRequest, keyFilter, valueFilter);
+//        }
+//
+//        KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
+//        keyValuePairGroupDto.setDictionary(dictionaryEntries.getContent());
+//        keyValuePairGroupDto.setCount(dictionaryEntries.getTotalPages());
+//
+//        return keyValuePairGroupDto;
+//    }
 
-        dictionaryRepository.createDictionaryTables(dictionaryTypeDto.getTableName());
-        return dictionaryTypeService.createDictionaryType(dictionaryTypeDto);
-    }
-
-    public List<DictionaryType> getActiveDictionaryTypes() {
-        return dictionaryTypeService.getActiveDictionaryTypes();
-    }
-
-    @Transactional
-    public ResponseDto deleteDictionaryType(String dictionaryTypeName) {
-        ResponseDto responseDto = dictionaryTypeService.deleteDictionaryType(dictionaryTypeName);
-        responseDto.setMessage(messageSource.getMessage(responseDto.getMessage(), null, LocaleContextHolder.getLocale()));
-        return responseDto;
-    }
-
-
-    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size, String keyFilter, String valueFilter, boolean searchAllDictionaries) {
-        validateDictionaryType(tableName);
-
-        PageRequest pageRequest = PageRequest.of(page - 1, size);
-        Page<BaseDictionary> dictionaryEntries;
-
-        if (searchAllDictionaries) {
-            dictionaryEntries = dictionaryRepository.findAllDictionaryEntriesAcrossAllDictionaries(getActiveDictionaryTypes(),pageRequest, keyFilter, valueFilter);
-        } else {
-            dictionaryEntries = dictionaryRepository.findAllDictionaryEntries(tableName, pageRequest, keyFilter, valueFilter);
-        }
-
-        KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
-        keyValuePairGroupDto.setDictionary(dictionaryEntries.getContent());
-        keyValuePairGroupDto.setCount(dictionaryEntries.getTotalPages());
-
-        return keyValuePairGroupDto;
-    }
-
-    public BaseDictionary findDictionaryEntryByKey(String tableName, String key) {
+    public DictionaryDto findDictionaryEntryByKey(String tableName, String key) {
         DictionaryType dictionaryType = validateDictionaryType(tableName);
         validateKey(dictionaryType, key);
 
-        return dictionaryRepository.findDictionaryEntryByKey(key, dictionaryType.getFilterSQL())
-                .orElseThrow(KeyNotFoundException::new);
+        DictionaryEntry dictionaryEntry = dictionaryEntryService.findByKeyAndDictionaryType(key, dictionaryType).orElseThrow(KeyNotFoundException::new);
+
+        List<String> values = dictionaryEntry.getValues().stream().map(DictionaryValue::getValue).collect(Collectors.toList());
+
+        return new DictionaryDto(key, values);
     }
 
     @Transactional
-    public BaseDictionary addDictionaryEntry(String tableName, KeyValuePairRequestDto keyValuePairDto) {
+    public KeyValuePairDto addDictionaryEntry(String tableName, KeyValuePairRequestDto keyValuePairDto) {
         DictionaryType dictionaryType = validateDictionaryType(tableName);
         validateKey(dictionaryType, keyValuePairDto.getKey());
 
-        dictionaryRepository.findDictionaryEntryByKey(keyValuePairDto.getKey(), dictionaryType.getFilterSQL())
-                .ifPresent(entry -> {
-                    throw new KeyFoundException();
-                });
+        Optional<DictionaryEntry> optionalEntry = dictionaryEntryService.findByKeyAndDictionaryType(keyValuePairDto.getKey(), dictionaryType);
 
-        return dictionaryRepository.addDictionaryEntry(tableName, keyValuePairDto.getKey(), keyValuePairDto.getValue());
+        if (optionalEntry.isPresent()) {
+            handleExistingEntry(optionalEntry.get(), keyValuePairDto.getValue());
+        } else {
+            createNewEntry(dictionaryType, keyValuePairDto);
+        }
+
+        return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue());
     }
+
+    private void handleExistingEntry(DictionaryEntry entry, String value) {
+        entry.getValues().stream().filter(e -> e.getValue().equals(value)).findFirst().ifPresent(e -> {
+            throw new KeyFoundException();
+        });
+        dictionaryValueService.createDictionaryValue(entry, value);
+    }
+
+    private void createNewEntry(DictionaryType dictionaryType, KeyValuePairRequestDto keyValuePairDto) {
+        DictionaryEntry dictionaryEntry = dictionaryEntryService.createDictionaryEntry(dictionaryType, keyValuePairDto.getKey());
+        dictionaryValueService.createDictionaryValue(dictionaryEntry, keyValuePairDto.getValue());
+    }
+
 
     @Transactional
     public ResponseDto removeDictionaryEntryByKey(String tableName, String key) {
-        BaseDictionary entry = findDictionaryEntryByKey(tableName, key);
-        dictionaryRepository.deleteDictionaryEntry(tableName, entry);
+        DictionaryType dictionaryType = validateDictionaryType(tableName);
+        validateKey(dictionaryType, key);
+
+        DictionaryEntry dictionaryEntry = dictionaryEntryService.findByKeyAndDictionaryType(key, dictionaryType).orElseThrow(KeyNotFoundException::new);
+        dictionaryEntryService.deleteDictionaryEntry(dictionaryEntry);
+
         return new ResponseDto(messageSource.getMessage("success.entry.removed", null, LocaleContextHolder.getLocale()));
     }
 
@@ -122,21 +124,22 @@ public class BaseDictionaryService {
 
     @Transactional
     public void exportDictionaryToXml(String tableName, OutputStream outputStream) {
-        validateDictionaryType(tableName);
+        DictionaryType dictionaryType = validateDictionaryType(tableName);
 
         try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
             writeString(bufferedOutputStream, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<dictionary>\n");
 
-            try (Stream<BaseDictionary> stream = dictionaryRepository.streamAllDictionaryEntries(tableName)) {
+            try (Stream<DictionaryEntry> stream = dictionaryEntryService.streamByDictionaryType(dictionaryType)) {
                 XmlMapper xmlMapper = new XmlMapper();
-                stream.forEach(entry -> {
+                stream.forEach(dictionaryValues -> dictionaryValues.getValues().stream().forEach(value -> {
                     try {
-                        String xmlEntry = xmlMapper.writeValueAsString(entry);
+                        KeyValuePairDto keyValuePairDto = new KeyValuePairDto(dictionaryValues.getKey(), value.getValue());
+                        String xmlEntry = xmlMapper.writeValueAsString(keyValuePairDto);
                         writeString(bufferedOutputStream, xmlEntry);
                     } catch (IOException e) {
                         throw new DictionaryException(e.getMessage());
                     }
-                });
+                }));
             }
 
             writeString(bufferedOutputStream, "</dictionary>");

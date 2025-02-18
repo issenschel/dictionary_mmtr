@@ -1,13 +1,12 @@
 package com.example.dictionary_mmtr.controller;
 
 import com.example.dictionary_mmtr.annotation.AdminAccess;
-import com.example.dictionary_mmtr.dto.KeyValuePairGroupDto;
+import com.example.dictionary_mmtr.dto.DictionaryDto;
+import com.example.dictionary_mmtr.dto.KeyValuePairDto;
 import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
 import com.example.dictionary_mmtr.dto.ResponseDto;
-import com.example.dictionary_mmtr.entity.BaseDictionary;
 import com.example.dictionary_mmtr.service.BaseDictionaryService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,18 +25,18 @@ public class DictionaryController {
         return dictionaryType;
     }
 
-    @GetMapping("/entries")
-    public KeyValuePairGroupDto getDictionaryEntries(
-            @ModelAttribute("dictionaryType") String dictionaryType,
-            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size,
-            @RequestParam(name = "keyFilter", required = false) String keyFilter,
-            @RequestParam(name = "valueFilter", required = false) String valueFilter,
-            @RequestParam(name = "searchAllDictionaries", defaultValue = "false") boolean searchAllDictionaries) {
-        return dictionaryService.getDictionaryEntries(dictionaryType, page, size, keyFilter, valueFilter, searchAllDictionaries);
-    }
+//    @GetMapping("/entries")
+//    public KeyValuePairGroupDto getDictionaryEntries(
+//            @ModelAttribute("dictionaryType") String dictionaryType,
+//            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
+//            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size,
+//            @RequestParam(name = "keyFilter", required = false) String keyFilter,
+//            @RequestParam(name = "valueFilter", required = false) String valueFilter,
+//            @RequestParam(name = "searchAllDictionaries", defaultValue = "false") boolean searchAllDictionaries) {
+//        return dictionaryService.getDictionaryEntries(dictionaryType, page, size, keyFilter, valueFilter, searchAllDictionaries);
+//    }
 
-    @GetMapping(value = "/entries/export", produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(value = "/entries/export")
     public ResponseEntity<StreamingResponseBody> exportDictionaryToXml(
             @ModelAttribute("dictionaryType") String dictionaryType) {
         return ResponseEntity.ok()
@@ -46,14 +45,15 @@ public class DictionaryController {
     }
 
     @GetMapping("/entries/search")
-    public BaseDictionary getDictionaryEntryByKey(
+    public DictionaryDto getDictionaryEntryByKey(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestParam(name = "key") String key) {
         return dictionaryService.findDictionaryEntryByKey(dictionaryType, key);
     }
 
     @PostMapping("/entries")
-    public BaseDictionary addDictionaryEntry(
+    @AdminAccess
+    public KeyValuePairDto addDictionaryEntry(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestBody @Valid KeyValuePairRequestDto keyValuePairRequestDto) {
         return dictionaryService.addDictionaryEntry(dictionaryType, keyValuePairRequestDto);

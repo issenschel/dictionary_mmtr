@@ -13,6 +13,7 @@ import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
@@ -30,6 +31,7 @@ import java.util.Map;
         "com.example.dictionary_mmtr.repository",
         "com.example.dictionary_mmtr.service"})
 @EnableJpaRepositories(basePackages = "com.example.dictionary_mmtr.repository")
+@EnableTransactionManagement
 @RequiredArgsConstructor
 public class AppConfig {
 
