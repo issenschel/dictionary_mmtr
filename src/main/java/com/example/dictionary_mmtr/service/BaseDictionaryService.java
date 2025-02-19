@@ -1,9 +1,6 @@
 package com.example.dictionary_mmtr.service;
 
-import com.example.dictionary_mmtr.dto.DictionaryDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
-import com.example.dictionary_mmtr.dto.ResponseDto;
+import com.example.dictionary_mmtr.dto.*;
 import com.example.dictionary_mmtr.entity.DictionaryEntry;
 import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.entity.DictionaryValue;
@@ -12,6 +9,9 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,24 +33,23 @@ public class BaseDictionaryService {
     private final DictionaryTypeService dictionaryTypeService;
     private final MessageSource messageSource;
 
-//    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size, String keyFilter, String valueFilter, boolean searchAllDictionaries) {
-//        validateDictionaryType(tableName);
-//
-//        PageRequest pageRequest = PageRequest.of(page - 1, size);
-//        Page<BaseDictionary> dictionaryEntries;
-//
-//        if (searchAllDictionaries) {
-//            dictionaryEntries = dictionaryRepository.findAllDictionaryEntriesAcrossAllDictionaries(getActiveDictionaryTypes(),pageRequest, keyFilter, valueFilter);
-//        } else {
-//            dictionaryEntries = dictionaryRepository.findAllDictionaryEntries(tableName, pageRequest, keyFilter, valueFilter);
-//        }
-//
-//        KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
-//        keyValuePairGroupDto.setDictionary(dictionaryEntries.getContent());
-//        keyValuePairGroupDto.setCount(dictionaryEntries.getTotalPages());
-//
-//        return keyValuePairGroupDto;
-//    }
+    public KeyValuePairGroupDto getDictionaryEntries(String tableName, int page, int size) {
+        DictionaryType dictionaryType = validateDictionaryType(tableName);
+        PageRequest pageRequest = PageRequest.of(page - 1, size);
+        Page<DictionaryEntry> entriesPage = dictionaryEntryService.findByDictionaryType(dictionaryType, pageRequest);
+
+        KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
+        List<DictionaryDto> dictionaryDtos = entriesPage.getContent().stream()
+                .map(entry -> new DictionaryDto(entry.getKey(), entry.getValues().stream()
+                        .map(DictionaryValue::getValue)
+                        .collect(Collectors.toList())))
+                .collect(Collectors.toList());
+
+        keyValuePairGroupDto.setDictionary(dictionaryDtos);
+        keyValuePairGroupDto.setCount(entriesPage.getTotalPages());
+        return keyValuePairGroupDto;
+    }
+
 
     public DictionaryDto findDictionaryEntryByKey(String tableName, String key) {
         DictionaryType dictionaryType = validateDictionaryType(tableName);

@@ -1,12 +1,10 @@
 package com.example.dictionary_mmtr.controller;
 
 import com.example.dictionary_mmtr.annotation.AdminAccess;
-import com.example.dictionary_mmtr.dto.DictionaryDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairDto;
-import com.example.dictionary_mmtr.dto.KeyValuePairRequestDto;
-import com.example.dictionary_mmtr.dto.ResponseDto;
+import com.example.dictionary_mmtr.dto.*;
 import com.example.dictionary_mmtr.service.BaseDictionaryService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,16 +23,12 @@ public class DictionaryController {
         return dictionaryType;
     }
 
-//    @GetMapping("/entries")
-//    public KeyValuePairGroupDto getDictionaryEntries(
-//            @ModelAttribute("dictionaryType") String dictionaryType,
-//            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-//            @RequestParam(name = "size", defaultValue = "10") @Min(1) int size,
-//            @RequestParam(name = "keyFilter", required = false) String keyFilter,
-//            @RequestParam(name = "valueFilter", required = false) String valueFilter,
-//            @RequestParam(name = "searchAllDictionaries", defaultValue = "false") boolean searchAllDictionaries) {
-//        return dictionaryService.getDictionaryEntries(dictionaryType, page, size, keyFilter, valueFilter, searchAllDictionaries);
-//    }
+    @GetMapping()
+    public KeyValuePairGroupDto getDictionary(@ModelAttribute("dictionaryType") String dictionaryType,
+                                              @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
+                                              @RequestParam(name = "size", defaultValue = "10") @Min(1) int size) {
+        return dictionaryService.getDictionaryEntries(dictionaryType, page, size);
+    }
 
     @GetMapping(value = "/entries/export")
     public ResponseEntity<StreamingResponseBody> exportDictionaryToXml(

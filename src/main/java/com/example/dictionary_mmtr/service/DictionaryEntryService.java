@@ -4,6 +4,8 @@ import com.example.dictionary_mmtr.entity.DictionaryEntry;
 import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.repository.DictionaryEntryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,6 +19,10 @@ public class DictionaryEntryService {
 
     public Optional<DictionaryEntry> findByKeyAndDictionaryType(String key, DictionaryType dictionaryType){
         return dictionaryEntryRepository.findByKeyAndDictionaryType(key, dictionaryType);
+    }
+
+    public Page<DictionaryEntry> findByDictionaryType(DictionaryType dictionaryType, Pageable pageable) {
+        return dictionaryEntryRepository.findByDictionaryType(dictionaryType, pageable);
     }
 
     public Stream<DictionaryEntry> streamByDictionaryType(DictionaryType dictionaryType){
