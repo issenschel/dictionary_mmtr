@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class DictionaryDto {
+public class    DictionaryDto {
     private String key;
     private List<String> values;
 }

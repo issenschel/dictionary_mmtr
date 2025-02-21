@@ -23,6 +23,9 @@ public class DictionaryEntry {
     @Column(name = "key")
     private String key;
 
+    @Column(name = "processed_key")
+    private String processedKey;
+
     @OneToMany(mappedBy = "dictionaryEntry", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DictionaryValue> values;
 }

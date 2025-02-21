@@ -9,13 +9,17 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 @RestControllerAdvice
 public class AdviceController {
@@ -64,7 +68,7 @@ public class AdviceController {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ResponseDto> validationException(ValidationException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage()) + e.getError()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto(getLanguageTypeFromRequest(e.getMessage())));
     }
 
     private String getLanguageTypeFromRequest(String e) {
@@ -96,6 +100,17 @@ public class AdviceController {
         String errorMessage = messageSource.getMessage("error.method.argument.type.mismatch",
                 new Object[]{ex.getName(), ex.getRequiredType().getSimpleName()}, locale);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(errorMessage));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex, Locale locale) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            String fieldName = error.getField();
+            String errorMessage = messageSource.getMessage(error.getDefaultMessage(), null, locale);
+            errors.put(fieldName, errorMessage);
+        });
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConversionFailedException.class)

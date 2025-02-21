@@ -1,9 +1,13 @@
 package com.example.dictionary_mmtr.service;
 
-import com.example.dictionary_mmtr.dto.DictionaryTypeDto;
+import com.example.dictionary_mmtr.dto.DictionaryTypeRequest;
 import com.example.dictionary_mmtr.entity.DictionaryType;
+import com.example.dictionary_mmtr.entity.ValidationType;
 import com.example.dictionary_mmtr.exception.DictionaryNotFoundException;
+import com.example.dictionary_mmtr.exception.KeyFoundException;
+import com.example.dictionary_mmtr.exception.ValidationException;
 import com.example.dictionary_mmtr.repository.DictionaryTypeRepository;
+import com.example.dictionary_mmtr.enums.ValidationKind;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +20,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DictionaryTypeService {
     private final DictionaryTypeRepository dictionaryTypeRepository;
+    private final ValidationTypeService validationTypeService;
 
     @Transactional
-    public DictionaryType createDictionaryType(DictionaryTypeDto dictionaryTypeDto) {
+    public DictionaryType createDictionaryType(DictionaryTypeRequest dictionaryTypeRequest) {
+
         DictionaryType dictionaryType = new DictionaryType();
-        dictionaryType.setName(dictionaryTypeDto.getTableName());
-        dictionaryType.setRegexPattern(dictionaryTypeDto.getRegexPattern());
-        dictionaryType.setFilterSQL(dictionaryTypeDto.getValidateSQL());
+        dictionaryType.setName(dictionaryTypeRequest.getDictionaryTypeName());
+        ValidationType validationType = validationTypeService.findByValidationType(dictionaryTypeRequest.getValidationKind())
+                .orElseThrow(KeyFoundException::new);
+        dictionaryType.setValidationType(validationType);
+
         return dictionaryTypeRepository.save(dictionaryType);
     }
 

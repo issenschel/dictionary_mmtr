@@ -3,13 +3,15 @@ package com.example.dictionary_mmtr.controller;
 import com.example.dictionary_mmtr.annotation.AdminAccess;
 import com.example.dictionary_mmtr.dto.*;
 import com.example.dictionary_mmtr.service.BaseDictionaryService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/dictionaries")

@@ -22,15 +22,12 @@ public class DictionaryType {
     @Column(name = "deleted")
     private Boolean deleted = false;
 
-    @JsonIgnore
-    @Column(name = "regex_pattern")
-    private String regexPattern;
-
-    @JsonIgnore
-    @Column(name = "filter_sql")
-    private String filterSQL;
+    @ManyToOne
+    @JoinColumn(name = "validation_type_id", nullable = false)
+    private ValidationType validationType;
 
     @OneToMany(mappedBy = "dictionaryType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<DictionaryEntry> entries;
 
 }

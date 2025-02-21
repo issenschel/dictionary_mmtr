@@ -4,10 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class ValidationException extends RuntimeException{
-    private final String error;
 
     public ValidationException(String error){
-        super("error.validation");
-        this.error = error;
+        super(error);
     }
 }

@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public interface DictionaryEntryRepository extends JpaRepository<DictionaryEntry, Integer> {
 
     @EntityGraph(attributePaths = "values")
-    Optional<DictionaryEntry> findByKeyAndDictionaryType(String key, DictionaryType dictionaryType);
+    Optional<DictionaryEntry> findByProcessedKeyAndDictionaryType(String processedKey, DictionaryType dictionaryType);
 
     @EntityGraph(attributePaths = "values")
     Page<DictionaryEntry> findByDictionaryType(DictionaryType dictionaryType, Pageable pageable);

@@ -36,7 +36,7 @@
 //        String createKeysTableSql = String.format(
 //                "CREATE TABLE IF NOT EXISTS %s (" +
 //                "id SERIAL PRIMARY KEY, " +
-//                "key VARCHAR(255) NOT NULL UNIQUE)", keysTableName);
+//                "rawKey VARCHAR(255) NOT NULL UNIQUE)", keysTableName);
 //        jdbcTemplate.execute(createKeysTableSql);
 //    }
 //
@@ -51,31 +51,31 @@
 //        jdbcTemplate.execute(createValuesTableSql);
 //    }
 //
-//    public BaseDictionary addDictionaryEntry(String dictionaryName, String key, String value) {
+//    public BaseDictionary addDictionaryEntry(String dictionaryName, String rawKey, String value) {
 //        DictionaryTableNames tableNames = getTableNames(dictionaryName);
 //
-//        String insertKeySql = String.format("INSERT INTO %s (key) VALUES (?) RETURNING id", tableNames.getKeysTableName());
-//        Integer keyId = jdbcTemplate.queryForObject(insertKeySql, Integer.class, key);
+//        String insertKeySql = String.format("INSERT INTO %s (rawKey) VALUES (?) RETURNING id", tableNames.getKeysTableName());
+//        Integer keyId = jdbcTemplate.queryForObject(insertKeySql, Integer.class, rawKey);
 //
 //        String insertValueSql = String.format("INSERT INTO %s (key_id, value) VALUES (?, ?) RETURNING *", tableNames.getValuesTableName());
 //
 //        return jdbcTemplate.queryForObject(insertValueSql, new BeanPropertyRowMapper<>(BaseDictionary.class), keyId, value);
 //    }
 //
-//    public Optional<BaseDictionary> findDictionaryEntryByKey(String key, String sql) {
-//        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs), key).stream().findFirst();
+//    public Optional<BaseDictionary> findDictionaryEntryByKey(String rawKey, String sql) {
+//        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs), rawKey).stream().findFirst();
 //    }
 //
 //    public Page<BaseDictionary> findAllDictionaryEntries(String dictionaryName, PageRequest pageRequest, String keyFilter, String valueFilter) {
 //        DictionaryTableNames tableNames = getTableNames(dictionaryName);
 //
 //        String sql = String.format(
-//                "SELECT k.id AS key_id, k.key, ARRAY_AGG(v.value) AS values " +
+//                "SELECT k.id AS key_id, k.rawKey, ARRAY_AGG(v.value) AS values " +
 //                "FROM %s k " +
 //                "JOIN %s v ON k.id = v.key_id " +
-//                "WHERE (?::VARCHAR IS NULL OR k.key = ?::VARCHAR) " +
+//                "WHERE (?::VARCHAR IS NULL OR k.rawKey = ?::VARCHAR) " +
 //                "AND (?::VARCHAR IS NULL OR v.value LIKE ?::VARCHAR) " +
-//                "GROUP BY k.id, k.key " +
+//                "GROUP BY k.id, k.rawKey " +
 //                "LIMIT ? OFFSET ?", tableNames.getKeysTableName(), tableNames.getValuesTableName());
 //
 //        List<BaseDictionary> content = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs),
@@ -83,7 +83,7 @@
 //
 //        String countSql = String.format(
 //                "SELECT COUNT(*) FROM %s k JOIN %s v ON k.id = v.key_id " +
-//                "WHERE (?::VARCHAR IS NULL OR k.key = ?::VARCHAR) " +
+//                "WHERE (?::VARCHAR IS NULL OR k.rawKey = ?::VARCHAR) " +
 //                "AND (?::VARCHAR IS NULL OR v.value LIKE ?::VARCHAR)",
 //                tableNames.getKeysTableName(), tableNames.getValuesTableName());
 //
@@ -105,10 +105,10 @@
 //        DictionaryTableNames tableNames = getTableNames(dictionaryName);
 //
 //        String sql = String.format(
-//                "SELECT k.id AS key_id, k.key, ARRAY_AGG(v.value) AS values " +
+//                "SELECT k.id AS key_id, k.rawKey, ARRAY_AGG(v.value) AS values " +
 //                "FROM %s k " +
 //                "JOIN %s v ON k.id = v.key_id " +
-//                "GROUP BY k.id, k.key", tableNames.getKeysTableName(), tableNames.getValuesTableName());
+//                "GROUP BY k.id, k.rawKey", tableNames.getKeysTableName(), tableNames.getValuesTableName());
 //
 //        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToBaseDictionary(rs)).stream();
 //    }
@@ -122,7 +122,7 @@
 //    private BaseDictionary mapRowToBaseDictionary(java.sql.ResultSet rs) throws java.sql.SQLException {
 //        BaseDictionary baseDictionary = new BaseDictionary();
 //        baseDictionary.setId(rs.getInt("key_id"));
-//        baseDictionary.setKey(rs.getString("key"));
+//        baseDictionary.setRawKey(rs.getString("rawKey"));
 //
 //        Array valuesArray = rs.getArray("values");
 //        String[] values = (String[]) valuesArray.getArray();

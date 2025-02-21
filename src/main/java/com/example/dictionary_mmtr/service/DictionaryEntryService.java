@@ -17,8 +17,8 @@ public class DictionaryEntryService {
 
     private final DictionaryEntryRepository dictionaryEntryRepository;
 
-    public Optional<DictionaryEntry> findByKeyAndDictionaryType(String key, DictionaryType dictionaryType){
-        return dictionaryEntryRepository.findByKeyAndDictionaryType(key, dictionaryType);
+    public Optional<DictionaryEntry> findByProcessedKeyAndDictionaryType(String key, DictionaryType dictionaryType){
+        return dictionaryEntryRepository.findByProcessedKeyAndDictionaryType(key, dictionaryType);
     }
 
     public Page<DictionaryEntry> findByDictionaryType(DictionaryType dictionaryType, Pageable pageable) {
@@ -29,10 +29,11 @@ public class DictionaryEntryService {
         return dictionaryEntryRepository.streamByDictionaryType(dictionaryType);
     }
 
-    public DictionaryEntry createDictionaryEntry(DictionaryType dictionaryType, String key) {
+    public DictionaryEntry createDictionaryEntry(DictionaryType dictionaryType, String key, String processedKey) {
         DictionaryEntry dictionaryEntry = new DictionaryEntry();
         dictionaryEntry.setDictionaryType(dictionaryType);
         dictionaryEntry.setKey(key);
+        dictionaryEntry.setProcessedKey(processedKey);
         return dictionaryEntryRepository.save(dictionaryEntry);
     }
 

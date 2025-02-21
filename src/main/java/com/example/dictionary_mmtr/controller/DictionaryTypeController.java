@@ -1,13 +1,12 @@
 package com.example.dictionary_mmtr.controller;
 
-import com.example.dictionary_mmtr.annotation.AdminAccess;
-import com.example.dictionary_mmtr.dto.DictionaryTypeDto;
+import com.example.dictionary_mmtr.dto.DictionaryTypeRequest;
 import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.service.DictionaryTypeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -22,14 +21,12 @@ public class DictionaryTypeController {
         return dictionaryTypeService.getActiveDictionaryTypes();
     }
 
-    @PostMapping()
-    @AdminAccess
-    public DictionaryType createDictionaryType(@RequestBody @Valid DictionaryTypeDto dictionaryTypeDto) {
-        return dictionaryTypeService.createDictionaryType(dictionaryTypeDto);
+    @PostMapping
+    public DictionaryType createDictionaryType(@Valid @RequestBody DictionaryTypeRequest dictionaryTypeRequest) {
+        return dictionaryTypeService.createDictionaryType(dictionaryTypeRequest);
     }
 
     @DeleteMapping("/{dictionaryTypeName}")
-    @AdminAccess
     public void deleteDictionaryType(@PathVariable String dictionaryTypeName) {
         dictionaryTypeService.deleteDictionaryType(dictionaryTypeName);
     }
