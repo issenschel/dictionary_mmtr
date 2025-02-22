@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -28,6 +29,15 @@ public class DictionaryEntryService {
     public Stream<DictionaryEntry> streamByDictionaryType(DictionaryType dictionaryType){
         return dictionaryEntryRepository.streamByDictionaryType(dictionaryType);
     }
+
+    public Page<DictionaryEntry> findByDictionaryTypeAndFilters(DictionaryType dictionaryType, Pageable pageable, String keyFilter, String valueFilter) {
+        return dictionaryEntryRepository.findByDictionaryTypeAndFilters(dictionaryType, pageable, keyFilter, valueFilter);
+    }
+
+    public Page<DictionaryEntry> findAllDictionaryEntriesAcrossAllDictionaries(List<DictionaryType> dictionaryTypes, Pageable pageable, String keyFilter, String valueFilter) {
+        return dictionaryEntryRepository.findAllDictionaryEntriesAcrossAllDictionaries(dictionaryTypes, pageable, keyFilter, valueFilter);
+    }
+
 
     public DictionaryEntry createDictionaryEntry(DictionaryType dictionaryType, String key, String processedKey) {
         DictionaryEntry dictionaryEntry = new DictionaryEntry();

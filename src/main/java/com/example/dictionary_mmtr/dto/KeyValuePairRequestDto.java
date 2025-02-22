@@ -7,9 +7,9 @@ import javax.validation.constraints.NotBlank;
 @Data
 public class KeyValuePairRequestDto {
 
-    @NotBlank(message = "Ключ не может быть пустым")
+    @NotBlank(message = "validation.key.notBlank")
     private String key;
 
-    @NotBlank(message = "Значение не может быть пустым")
+    @NotBlank(message = "validation.value.notBlank")
     private String value;
 }

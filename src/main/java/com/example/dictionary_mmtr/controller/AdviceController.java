@@ -2,6 +2,7 @@ package com.example.dictionary_mmtr.controller;
 
 import com.example.dictionary_mmtr.dto.ResponseDto;
 import com.example.dictionary_mmtr.exception.*;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -9,6 +10,8 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,9 +20,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class AdviceController {
@@ -84,9 +89,45 @@ public class AdviceController {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ResponseDto> httpMessageNotReadable(Locale locale) {
+    public ResponseEntity<ResponseDto> httpMessageNotReadable(HttpMessageNotReadableException ex, Locale locale) {
+        Throwable rootCause = ex.getRootCause();
+
+        if (rootCause instanceof InvalidFormatException) {
+            return handleInvalidFormatException((InvalidFormatException) rootCause, locale);
+        }
+
         String errorMessage = messageSource.getMessage("error.message.not.readable", null, locale);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(errorMessage));
+        return ResponseEntity.badRequest().body(new ResponseDto(errorMessage));
+    }
+
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<ResponseDto> handleInvalidFormatException(InvalidFormatException ex, Locale locale) {
+        String errorMessage;
+
+        if (ex.getTargetType() != null && ex.getTargetType().isEnum()) {
+            errorMessage = handleEnumInvalidFormatException(ex, locale);
+        } else {
+            errorMessage = messageSource.getMessage(
+                    "error.invalid.format",
+                    new Object[]{ex.getValue(), ex.getTargetType().getSimpleName()},
+                    locale
+            );
+        }
+
+        return ResponseEntity.badRequest().body(new ResponseDto(errorMessage));
+    }
+
+    private String handleEnumInvalidFormatException(InvalidFormatException ex, Locale locale) {
+        Class<? extends Enum> enumClass = (Class<? extends Enum>) ex.getTargetType();
+        String availableValues = Arrays.stream(enumClass.getEnumConstants())
+                .map(Enum::name)
+                .collect(Collectors.joining(", "));
+
+        return messageSource.getMessage(
+                "error.invalid.enum.value",
+                new Object[]{ex.getValue(), availableValues},
+                locale
+        );
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -114,8 +155,22 @@ public class AdviceController {
     }
 
     @ExceptionHandler(ConversionFailedException.class)
-    public ResponseEntity<ResponseDto> handleConversionFailedException(ConversionFailedException ex, Locale locale) {
+    public ResponseEntity<ResponseDto> handleConversionFailedException(Locale locale) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(messageSource.getMessage("error.conversion.failed", null, locale)));
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<Map<String, String>> handleBindException(BindException ex, Locale locale) {
+        Map<String, String> errors = new HashMap<>();
+        BindingResult result = ex.getBindingResult();
+
+        for (FieldError error : result.getFieldErrors()) {
+            String fieldName = error.getField();
+            String errorMessage = messageSource.getMessage("error.invalid.field", new Object[]{error.getRejectedValue()}, locale);
+            errors.put(fieldName, errorMessage);
+        }
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
 }

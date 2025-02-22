@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/dictionaries")
@@ -25,11 +24,9 @@ public class DictionaryController {
         return dictionaryType;
     }
 
-    @GetMapping()
-    public KeyValuePairGroupDto getDictionary(@ModelAttribute("dictionaryType") String dictionaryType,
-                                              @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(name = "size", defaultValue = "10") @Min(1) int size) {
-        return dictionaryService.getDictionaryEntries(dictionaryType, page, size);
+    @GetMapping
+    public KeyValuePairGroupDto getDictionary(@ModelAttribute DictionaryQueryDto query) {
+        return dictionaryService.getDictionaryEntries(query);
     }
 
     @GetMapping(value = "/entries/export")
@@ -41,7 +38,7 @@ public class DictionaryController {
     }
 
     @GetMapping("/entries/search")
-    public DictionaryDto getDictionaryEntryByKey(
+    public KeyValuesDto getDictionaryEntryByKey(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestParam(name = "key") String key) {
         return dictionaryService.findDictionaryEntryByKey(dictionaryType, key);

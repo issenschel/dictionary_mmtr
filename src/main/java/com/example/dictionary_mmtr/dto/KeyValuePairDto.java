@@ -7,5 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class KeyValuePairDto {
     private String key;
-    private String values;
+    private String value;
 }

@@ -14,6 +14,6 @@ public class DictionaryTypeRequest {
     @Size(min = 2, message = "validation.dictionaryTypeName.size")
     private String dictionaryTypeName;
 
-    @NotNull(message = "validation.validationKind.notBlank")
+    @NotNull(message = "validation.validationKind.notNull")
     private ValidationKind validationKind;
 }

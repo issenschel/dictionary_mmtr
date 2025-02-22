@@ -22,7 +22,7 @@ public class DictionaryType {
     @Column(name = "deleted")
     private Boolean deleted = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "validation_type_id", nullable = false)
     private ValidationType validationType;
 
