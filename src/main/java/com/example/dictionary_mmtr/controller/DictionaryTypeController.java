@@ -1,5 +1,6 @@
 package com.example.dictionary_mmtr.controller;
 
+import com.example.dictionary_mmtr.annotation.AdminAccess;
 import com.example.dictionary_mmtr.dto.DictionaryTypeRequest;
 import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.service.DictionaryTypeService;

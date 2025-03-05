@@ -10,6 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class BaseDictionaryService {
     private final MessageSource messageSource;
 
     public KeyValuePairGroupDto getDictionaryEntries(DictionaryQueryDto query) {
-        PageRequest pageRequest = PageRequest.of(query.getPage() - 1, query.getSize());
+        PageRequest pageRequest = PageRequest.of(query.getPage() - 1, query.getSize(), Sort.by(Sort.Direction.DESC, "searchCount"));
         Page<DictionaryEntry> entriesPage;
         if (query.isSearchAll()) {
             List<DictionaryType> activeDictionaryTypes = dictionaryTypeService.getActiveDictionaryTypes();
@@ -42,13 +43,13 @@ public class BaseDictionaryService {
                     dictionaryType, pageRequest, query.getKeyFilter(), query.getValueFilter());
         }
 
-        return createKeyValuePairGroupDto(entriesPage, query.isUseLegacyFormat());
+        return createKeyValuePairGroupDto(entriesPage);
     }
 
-    private KeyValuePairGroupDto createKeyValuePairGroupDto(Page<DictionaryEntry> entriesPage, boolean useLegacyFormat) {
+    private KeyValuePairGroupDto createKeyValuePairGroupDto(Page<DictionaryEntry> entriesPage) {
         KeyValuePairGroupDto keyValuePairGroupDto = new KeyValuePairGroupDto();
-        List<KeyValuesDto> dictionaryEntries = entriesPage.getContent().stream()
-                .map(entry -> dictionaryMapper.convertToDictionaryDto(entry, useLegacyFormat))
+        List<KeyValuePairDto> dictionaryEntries = entriesPage.getContent().stream()
+                .flatMap(entry -> dictionaryMapper.convertToDictionaryDto(entry).stream())
                 .collect(Collectors.toList());
 
         keyValuePairGroupDto.setDictionary(dictionaryEntries);
@@ -56,9 +57,10 @@ public class BaseDictionaryService {
         return keyValuePairGroupDto;
     }
 
-    public KeyValuesDto findDictionaryEntryByKey(String tableName, String key) {
+    public List<KeyValuePairDto> findDictionaryEntryByKey(String tableName, String key) {
         DictionaryEntry dictionaryEntry = findValidatedDictionaryEntry(tableName, key).orElseThrow(KeyNotFoundException::new);
-        return dictionaryMapper.convertToDictionaryDto(dictionaryEntry, false);
+        dictionaryEntryService.incrementSearchCount(dictionaryEntry.getId());
+        return dictionaryMapper.convertToDictionaryDto(dictionaryEntry);
     }
 
     @Transactional
@@ -75,7 +77,7 @@ public class BaseDictionaryService {
             createNewEntry(dictionaryType, keyValuePairDto, processedKey);
         }
 
-        return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue());
+        return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue(), dictionaryType.getName());
     }
 
     @Transactional

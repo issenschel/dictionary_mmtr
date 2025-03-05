@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class KeyValuePairGroupDto {
-    private List<KeyValuesDto> dictionary;
+    private List<KeyValuePairDto> dictionary;
     private Integer count;
 
     public KeyValuePairGroupDto() {

@@ -1,8 +1,7 @@
 package com.example.dictionary_mmtr.service;
 
-import com.example.dictionary_mmtr.dto.KeyValuesDto;
+import com.example.dictionary_mmtr.dto.KeyValuePairDto;
 import com.example.dictionary_mmtr.entity.DictionaryEntry;
-import com.example.dictionary_mmtr.entity.DictionaryValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,15 +11,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class DictionaryMapper {
-    public KeyValuesDto convertToDictionaryDto(DictionaryEntry entry, boolean useLegacyFormat) {
-        List<String> values = entry.getValues().stream()
-                .map(DictionaryValue::getValue)
+    public List<KeyValuePairDto> convertToDictionaryDto(DictionaryEntry entry) {
+        return entry.getValues().stream()
+                .map(dictionaryValue -> new KeyValuePairDto(entry.getKey(), dictionaryValue.getValue(), entry.getDictionaryType().getName()))
                 .collect(Collectors.toList());
-
-        if (useLegacyFormat) {
-            return new KeyValuesDto(entry.getKey(), values.isEmpty() ? null : values.get(0));
-        } else {
-            return new KeyValuesDto(entry.getKey(), values);
-        }
     }
 }

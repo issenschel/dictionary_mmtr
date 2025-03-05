@@ -24,6 +24,7 @@ public class DictionaryType {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "validation_type_id", nullable = false)
+    @JsonIgnore
     private ValidationType validationType;
 
     @OneToMany(mappedBy = "dictionaryType", cascade = CascadeType.ALL, orphanRemoval = true)

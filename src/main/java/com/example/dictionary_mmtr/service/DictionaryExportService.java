@@ -27,7 +27,7 @@ public class DictionaryExportService {
                 XmlMapper xmlMapper = new XmlMapper();
                 stream.forEach(entry -> entry.getValues().forEach(value -> {
                     try {
-                        String xmlEntry = xmlMapper.writeValueAsString(new KeyValuePairDto(entry.getKey(), value.getValue()));
+                        String xmlEntry = xmlMapper.writeValueAsString(new KeyValuePairDto(entry.getKey(), value.getValue(), dictionaryType.getName()));
                         writeString(bufferedOutputStream, xmlEntry);
                     } catch (IOException e) {
                         throw new DictionaryException(e.getMessage());

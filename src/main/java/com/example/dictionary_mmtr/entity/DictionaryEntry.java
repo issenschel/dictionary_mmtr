@@ -26,6 +26,9 @@ public class DictionaryEntry {
     @Column(name = "processed_key")
     private String processedKey;
 
+    @Column(name = "search_count")
+    private Integer searchCount = 0;
+
     @OneToMany(mappedBy = "dictionaryEntry", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DictionaryValue> values;
 }

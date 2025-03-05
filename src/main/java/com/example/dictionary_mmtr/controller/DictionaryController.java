@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/dictionaries")
@@ -38,7 +39,7 @@ public class DictionaryController {
     }
 
     @GetMapping("/entries/search")
-    public KeyValuesDto getDictionaryEntryByKey(
+    public List<KeyValuePairDto> getDictionaryEntryByKey(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestParam(name = "key") String key) {
         return dictionaryService.findDictionaryEntryByKey(dictionaryType, key);

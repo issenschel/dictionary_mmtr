@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -45,4 +46,7 @@ public interface DictionaryEntryRepository extends JpaRepository<DictionaryEntry
                                                                         @Param("keyFilter") String keyFilter,
                                                                         @Param("valueFilter") String valueFilter);
 
+    @Modifying
+    @Query("UPDATE DictionaryEntry de SET de.searchCount = de.searchCount + 1 WHERE de.id = :id")
+    void incrementSearchCount(@Param("id") Integer id);
 }

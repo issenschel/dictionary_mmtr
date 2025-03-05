@@ -46,8 +46,6 @@ public class DictionaryTypeService {
     }
 
     public List<DictionaryType> getActiveDictionaryTypes() {
-        return dictionaryTypeRepository.findAll().stream()
-                .filter(dictionaryType -> !dictionaryType.getDeleted())
-                .collect(Collectors.toList());
+        return dictionaryTypeRepository.findActiveDictionaryTypesOrderByPopularity();
     }
 }
