@@ -29,6 +29,7 @@ public class BaseDictionaryService {
     private final DictionaryMapper dictionaryMapper;
     private final DictionaryExportService exportService;
     private final MessageSource messageSource;
+    private final DictionaryCallbackService callbackService;
 
     public KeyValuePairGroupDto getDictionaryEntries(DictionaryQueryDto query) {
         PageRequest pageRequest = PageRequest.of(query.getPage() - 1, query.getSize(), Sort.by(Sort.Direction.DESC, "searchCount"));
@@ -77,6 +78,7 @@ public class BaseDictionaryService {
             createNewEntry(dictionaryType, keyValuePairDto, processedKey);
         }
 
+        callbackService.notifySubscribers(dictionaryType, "entry_added", keyValuePairDto);
         return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue(), dictionaryType.getName());
     }
 
@@ -84,6 +86,7 @@ public class BaseDictionaryService {
     public ResponseDto removeDictionaryEntryByKey(String tableName, String key) {
         DictionaryEntry dictionaryEntry = findValidatedDictionaryEntry(tableName, key).orElseThrow(KeyNotFoundException::new);
         dictionaryEntryService.deleteDictionaryEntry(dictionaryEntry);
+        callbackService.notifySubscribers(dictionaryEntry.getDictionaryType(), "entry_removed", dictionaryEntry);
         return new ResponseDto(messageSource.getMessage("success.entry.removed", null, LocaleContextHolder.getLocale()));
     }
 

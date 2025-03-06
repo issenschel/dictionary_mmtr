@@ -16,7 +16,7 @@ public class DictionaryEntry {
     @Column(name = "id")
     private Integer id;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "dictionary_type_id")
     private DictionaryType dictionaryType;
 

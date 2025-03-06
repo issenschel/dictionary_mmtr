@@ -31,4 +31,8 @@ public class DictionaryType {
     @JsonIgnore
     private List<DictionaryEntry> entries;
 
+    @OneToMany(mappedBy = "dictionaryType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<DictionaryCallbackSubscription> dictionaryCallbackSubscription;
+
 }

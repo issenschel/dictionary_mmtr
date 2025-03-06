@@ -5,16 +5,13 @@ import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.entity.ValidationType;
 import com.example.dictionary_mmtr.exception.DictionaryNotFoundException;
 import com.example.dictionary_mmtr.exception.KeyFoundException;
-import com.example.dictionary_mmtr.exception.ValidationException;
 import com.example.dictionary_mmtr.repository.DictionaryTypeRepository;
-import com.example.dictionary_mmtr.enums.ValidationKind;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +44,9 @@ public class DictionaryTypeService {
 
     public List<DictionaryType> getActiveDictionaryTypes() {
         return dictionaryTypeRepository.findActiveDictionaryTypesOrderByPopularity();
+    }
+
+    public Optional<DictionaryType> findDictionaryTypeById(int id) {
+        return dictionaryTypeRepository.findById(id);
     }
 }
