@@ -1,5 +1,6 @@
 package com.example.dictionary_mmtr.service;
 
+import com.example.dictionary_mmtr.dto.CallbackNotificationDto;
 import com.example.dictionary_mmtr.dto.ResponseDto;
 import com.example.dictionary_mmtr.entity.DictionaryCallbackSubscription;
 import com.example.dictionary_mmtr.entity.DictionaryType;
@@ -11,13 +12,11 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -44,22 +43,21 @@ public class DictionaryCallbackService {
         return new ResponseDto(messageSource.getMessage("success.unsubscribe", null, LocaleContextHolder.getLocale()));
     }
 
-    public void notifySubscribers(DictionaryType dictionaryType, String eventType, Object payload) {
+    //Временная заглушка
+    public void notifySubscribers(DictionaryType dictionaryType, String eventType, Object object) {
+        CallbackNotificationDto callbackNotificationDto = new CallbackNotificationDto();
+//        callbackNotificationDto.setKey(keyValuePairDto.getKey());
+//        callbackNotificationDto.setValue(keyValuePairDto.getValue());
+        callbackNotificationDto.setOperationTimestamp(LocalDateTime.now());
+
         subscriptionRepository.findByDictionaryType(dictionaryType).forEach(subscription -> {
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("eventType", eventType);
-            requestBody.put("payload", payload);
-
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + subscription.getAccessToken());
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+            headers.set("access-token", subscription.getAccessToken());
+            headers.set("event-type", eventType);
 
-            ResponseEntity<Void> response = restTemplate.exchange(
-                    subscription.getCallbackUrl(),
-                    HttpMethod.POST,
-                    requestEntity,
-                    Void.class
-            );
+            HttpEntity<CallbackNotificationDto> requestEntity = new HttpEntity<>(callbackNotificationDto, headers);
+
+            restTemplate.exchange(subscription.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class);
         });
     }
 }

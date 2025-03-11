@@ -17,17 +17,19 @@ public class DictionaryTypeController {
 
     private final DictionaryTypeService dictionaryTypeService;
 
-    @GetMapping()
+    @GetMapping
     public List<DictionaryType> getAllActiveDictionaryTypes() {
         return dictionaryTypeService.getActiveDictionaryTypes();
     }
 
     @PostMapping
+    @AdminAccess
     public DictionaryType createDictionaryType(@Valid @RequestBody DictionaryTypeRequest dictionaryTypeRequest) {
         return dictionaryTypeService.createDictionaryType(dictionaryTypeRequest);
     }
 
     @DeleteMapping("/{dictionaryTypeName}")
+    @AdminAccess
     public void deleteDictionaryType(@PathVariable String dictionaryTypeName) {
         dictionaryTypeService.deleteDictionaryType(dictionaryTypeName);
     }

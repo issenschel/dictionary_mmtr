@@ -78,7 +78,7 @@ public class BaseDictionaryService {
             createNewEntry(dictionaryType, keyValuePairDto, processedKey);
         }
 
-        callbackService.notifySubscribers(dictionaryType, "entry_added", keyValuePairDto);
+        callbackService.notifySubscribers(dictionaryType, "entry_added", optionalEntry);
         return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue(), dictionaryType.getName());
     }
 
