@@ -18,6 +18,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +59,8 @@ public class DictionaryCallbackService {
 
             HttpEntity<CallbackNotificationDto> requestEntity = new HttpEntity<>(callbackNotificationDto, headers);
 
-            restTemplate.exchange(subscription.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class);
+            CompletableFuture.runAsync(() -> restTemplate.exchange(subscription.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class))
+                    .orTimeout(3, TimeUnit.SECONDS).exceptionally(ex -> null);
         });
     }
 }
