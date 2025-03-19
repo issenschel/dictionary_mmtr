@@ -7,27 +7,27 @@ import com.example.dictionary_mmtr.entity.DictionaryType;
 import com.example.dictionary_mmtr.exception.DictionaryNotFoundException;
 import com.example.dictionary_mmtr.repository.DictionaryCallbackSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+
 
 @Service
 @RequiredArgsConstructor
 public class DictionaryCallbackService {
     private final DictionaryTypeService dictionaryTypeService;
     private final DictionaryCallbackSubscriptionRepository subscriptionRepository;
-    private final RestTemplate restTemplate;
+    private final RabbitTemplate rabbitTemplate;
     private final MessageSource messageSource;
+
+    @Value("${rabbit.queue.name}")
+    private String rabbitQueueName;
 
     @Transactional
     public DictionaryCallbackSubscription subscribeToDictionary(int dictionaryTypeId, String callbackUrl, String accessToken) {
@@ -51,16 +51,12 @@ public class DictionaryCallbackService {
 //        callbackNotificationDto.setKey(keyValuePairDto.getKey());
 //        callbackNotificationDto.setValue(keyValuePairDto.getValue());
         callbackNotificationDto.setOperationTimestamp(LocalDateTime.now());
+        callbackNotificationDto.setEventType(eventType);
 
         subscriptionRepository.findByDictionaryType(dictionaryType).forEach(subscription -> {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("access-token", subscription.getAccessToken());
-            headers.set("event-type", eventType);
-
-            HttpEntity<CallbackNotificationDto> requestEntity = new HttpEntity<>(callbackNotificationDto, headers);
-
-            CompletableFuture.runAsync(() -> restTemplate.exchange(subscription.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class))
-                    .orTimeout(3, TimeUnit.SECONDS).exceptionally(ex -> null);
+            callbackNotificationDto.setCallbackUrl(subscription.getCallbackUrl());
+            callbackNotificationDto.setAccessToken(subscription.getAccessToken());
+            rabbitTemplate.convertAndSend(rabbitQueueName, callbackNotificationDto);
         });
     }
 }

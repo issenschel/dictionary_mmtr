@@ -24,7 +24,8 @@
                 com.example.dictionary_mmtr.config.AppConfig,
                 com.example.dictionary_mmtr.config.DatabaseConfig,
                 com.example.dictionary_mmtr.config.WebConfig,
-                com.example.dictionary_mmtr.config.SecurityConfig
+                com.example.dictionary_mmtr.config.SecurityConfig,
+                com.example.dictionary_mmtr.config.RabbitMQConfig
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

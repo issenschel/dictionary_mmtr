@@ -46,7 +46,6 @@ public class DictionaryController {
     }
 
     @PostMapping("/entries")
-    @AdminAccess
     public KeyValuePairDto addDictionaryEntry(
             @ModelAttribute("dictionaryType") String dictionaryType,
             @RequestBody @Valid KeyValuePairRequestDto keyValuePairRequestDto) {

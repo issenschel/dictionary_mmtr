@@ -12,7 +12,7 @@ public class DictionaryCallbackSubscription {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "subscription_id")
+    @Column(name = "id")
     private UUID subscriptionId;
 
     @ManyToOne

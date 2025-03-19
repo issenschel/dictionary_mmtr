@@ -1,5 +1,6 @@
 package com.example.dictionary_mmtr.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -20,13 +21,10 @@ import java.util.Map;
 @Configuration
 @EnableJpaRepositories(basePackages = "com.example.dictionary_mmtr.repository")
 @EnableTransactionManagement
+@RequiredArgsConstructor
 public class DatabaseConfig {
 
     private final Environment environment;
-
-    public DatabaseConfig(Environment environment) {
-        this.environment = environment;
-    }
 
     @Bean
     public DataSource dataSource() {
