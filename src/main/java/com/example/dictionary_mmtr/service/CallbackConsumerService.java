@@ -38,7 +38,6 @@ public class CallbackConsumerService {
         CompletableFuture.supplyAsync(() -> restTemplate.exchange(callbackNotificationDto.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class))
                 .orTimeout(30, TimeUnit.SECONDS)
                 .exceptionally(ex -> {
-                    System.out.println(ex.getMessage());
                     rabbitTemplate.convertAndSend(rabbitQueueName, callbackNotificationDto);
                     return null;
                 });

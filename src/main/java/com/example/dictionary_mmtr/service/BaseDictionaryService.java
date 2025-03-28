@@ -3,7 +3,6 @@ package com.example.dictionary_mmtr.service;
 import com.example.dictionary_mmtr.dto.*;
 import com.example.dictionary_mmtr.entity.DictionaryEntry;
 import com.example.dictionary_mmtr.entity.DictionaryType;
-import com.example.dictionary_mmtr.exception.KeyFoundException;
 import com.example.dictionary_mmtr.exception.KeyNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -70,15 +69,12 @@ public class BaseDictionaryService {
         validationService.validateKey(dictionaryType, keyValuePairDto.getKey());
         String processedKey = validationService.processKey(keyValuePairDto.getKey(), dictionaryType);
 
-        Optional<DictionaryEntry> optionalEntry = findValidatedDictionaryEntry(tableName, processedKey);
+        DictionaryEntry dictionaryEntry = findValidatedDictionaryEntry(tableName, processedKey)
+                .orElseGet(() -> dictionaryEntryService.createDictionaryEntry(dictionaryType, keyValuePairDto.getKey(), processedKey));
+        dictionaryValueService.createDictionaryValue(dictionaryEntry, keyValuePairDto.getValue());
 
-        if (optionalEntry.isPresent()) {
-            handleExistingEntry(optionalEntry.get(), keyValuePairDto.getValue());
-        } else {
-            createNewEntry(dictionaryType, keyValuePairDto, processedKey);
-        }
 
-        callbackService.notifySubscribers(dictionaryType, "entry_added", optionalEntry);
+        callbackService.notifySubscribers(dictionaryType, "entry_added", dictionaryEntry);
         return new KeyValuePairDto(keyValuePairDto.getKey(), keyValuePairDto.getValue(), dictionaryType.getName());
     }
 
@@ -101,17 +97,5 @@ public class BaseDictionaryService {
         validationService.validateKey(dictionaryType, key);
         String processedKey = validationService.processKey(key, dictionaryType);
         return dictionaryEntryService.findByProcessedKeyAndDictionaryType(processedKey, dictionaryType);
-    }
-
-    private void handleExistingEntry(DictionaryEntry entry, String value) {
-        if (entry.getValues().stream().anyMatch(e -> e.getValue().equals(value))) {
-            throw new KeyFoundException();
-        }
-        dictionaryValueService.createDictionaryValue(entry, value);
-    }
-
-    private void createNewEntry(DictionaryType dictionaryType, KeyValuePairRequestDto keyValuePairDto, String processedKey) {
-        DictionaryEntry dictionaryEntry = dictionaryEntryService.createDictionaryEntry(dictionaryType, keyValuePairDto.getKey(), processedKey);
-        dictionaryValueService.createDictionaryValue(dictionaryEntry, keyValuePairDto.getValue());
     }
 }

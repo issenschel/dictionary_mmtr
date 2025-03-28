@@ -23,8 +23,8 @@ public class DictionaryCallbackController {
     }
 
     @DeleteMapping
-    public ResponseEntity<?> unsubscribeFromDictionary(@RequestParam UUID subscriptionUUID) {
-        return ResponseEntity.ok().body(callbackService.unsubscribeFromDictionary(subscriptionUUID));
+    public ResponseEntity<?> unsubscribeFromDictionary(@RequestParam UUID subscriptionId) {
+        return ResponseEntity.ok().body(callbackService.unsubscribeFromDictionary(subscriptionId));
     }
 
 }

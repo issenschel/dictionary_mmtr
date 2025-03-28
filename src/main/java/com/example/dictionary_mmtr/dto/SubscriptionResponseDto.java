@@ -8,6 +8,6 @@ import java.util.UUID;
 @Data
 public class SubscriptionResponseDto {
 
-    @NotBlank(message = "validation.subscriptionUUID.notBlank")
-    private final UUID subscriptionUUID;
+    @NotBlank(message = "validation.subscriptionId.notBlank")
+    private final UUID subscriptionId;
 }
